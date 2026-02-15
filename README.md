@@ -65,6 +65,23 @@ Agent Passport Standard defines **cryptographically verifiable artifacts** for A
 
 ---
 
+## Trust Levels
+
+APS operates at three trust levels with progressively stronger guarantees:
+
+| Level | Blockchain? | Guarantees |
+|-------|------------|------------|
+| **Basic** | No | Format + signatures. Trust the signer. |
+| **Anchored** | Yes | + Immutability, verifiable timestamps, tamper detection |
+| **Full** | Yes + on-chain | + Heritage, attestation exchange, governance, identity registry |
+
+> **Without blockchain, APS is a format standard. With blockchain, APS is a security standard.**
+
+We strongly recommend Level 2 (Anchored) for any production deployment.
+Level 3 (Full) is recommended for agent marketplaces and multi-organization ecosystems.
+
+---
+
 ## Quick Start
 
 ### Validate artifacts with the CLI

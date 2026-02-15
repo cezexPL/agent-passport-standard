@@ -744,6 +744,198 @@ Revocation lists MAY be anchored on-chain using the anchoring provider interface
 
 ---
 
+## 14. Trust Levels & Blockchain Anchoring Requirement
+
+### 14.1 Overview
+
+The Agent Passport Standard operates at three trust levels. Each level provides
+progressively stronger security guarantees. Implementations MUST clearly declare
+which trust level they support.
+
+Without blockchain anchoring, APS provides format standardization and
+cryptographic signatures — but cannot guarantee immutability, verifiable
+timestamps, or cross-platform trust. **Blockchain anchoring transforms APS
+from a format standard into a security standard.**
+
+### 14.2 Trust Levels
+
+#### Level 1: APS Basic (No Blockchain Required)
+
+Provides:
+- Standardized JSON format for agent identity, work, and security
+- Ed25519 digital signatures proving authorship
+- Keccak-256 hash chains for snapshot versioning
+- Local verification of document integrity
+
+Limitations:
+- Timestamps are self-reported (signer can backdate)
+- Document replacement is undetectable (no external proof of existence)
+- Cross-platform verification relies entirely on trusting the signer
+- Heritage and lineage claims cannot be independently verified
+- Attestation revocation is not enforceable
+
+Suitable for: Internal agent systems, development/testing, single-organization deployments where all participants trust each other.
+
+#### Level 2: APS Anchored (Blockchain Required)
+
+Provides everything in Level 1, plus:
+- Immutable proof-of-existence for all artifacts (passport, receipt, envelope)
+- Verifiable timestamps tied to block numbers (cannot be forged or backdated)
+- Tamper detection — any modification after anchoring is detectable
+- Batch anchoring via Merkle trees for cost efficiency
+- Cross-organization verification without mutual trust
+
+Implementation pattern:
+1. Agent creates/updates passport → computes keccak-256 hash
+2. Hash is committed to an EVM-compatible blockchain
+3. Smart contract stores: `mapping(bytes32 => AnchorRecord)` with hash, timestamp, owner
+4. Any verifier can call the contract to confirm the hash was anchored at a specific time
+5. Batch mode: multiple hashes combined into a Merkle tree, only root anchored on-chain
+
+Cost considerations:
+- Individual anchor: ~$0.005-0.02 per transaction on L2 chains
+- Batch anchor (100 hashes): ~$0.005-0.02 total (Merkle root only)
+- Monthly cost for 10,000 active agents: ~$5-20 on L2
+
+Suitable for: Production agent marketplaces, multi-organization deployments, any system where participants do not fully trust each other.
+
+#### Level 3: APS Full (Blockchain + On-Chain Attestations)
+
+Provides everything in Level 2, plus:
+- Attestations anchored on-chain with revocation capability
+- Heritage and lineage DAG anchored immutably
+- Memory vault integrity proofs on-chain
+- On-chain governance for benchmark evolution
+- Smart contract-based agent identity registry
+- Owner identity verification via selective disclosure
+
+Implementation pattern:
+1. Agent Identity Registry contract: `register(did, snapshotHash, ownerHash)`
+2. Attestation anchoring: `anchorAttestation(agentDid, attestationType, hash)`
+3. Batch work events: `anchorWorkBatch(merkleRoot, eventCount)`
+4. Heritage tracking: `registerLineage(childDid, parentDids[], generation)`
+5. Governance: `proposeEvolution(suiteId, newVersion)` with voting
+
+Suitable for: High-assurance environments, regulated industries, platforms where agent work has financial or legal consequences.
+
+### 14.3 Feature-to-Level Mapping
+
+The following table specifies the MINIMUM trust level required for each APS feature:
+
+| Feature | Basic | Anchored | Full |
+|---------|-------|----------|------|
+| Agent Passport (create, sign, verify) | ✅ | ✅ | ✅ |
+| Work Receipt (lifecycle events) | ✅ | ✅ | ✅ |
+| Security Envelope (sandbox constraints) | ✅ | ✅ | ✅ |
+| Snapshot hash chain | ✅ | ✅ | ✅ |
+| Verifiable timestamps | ❌ | ✅ | ✅ |
+| Tamper detection (post-anchor) | ❌ | ✅ | ✅ |
+| Cross-platform verification | ❌ | ✅ | ✅ |
+| Batch proof (Merkle trees) | ❌ | ✅ | ✅ |
+| Heritage & Lineage tracking | ❌ | ❌ | ✅ |
+| Attestation Exchange (cross-platform) | ❌ | ❌ | ✅ |
+| Memory Vault integrity proof | ❌ | ❌ | ✅ |
+| Benchmark governance | ❌ | ❌ | ✅ |
+| On-chain agent identity registry | ❌ | ❌ | ✅ |
+| Revocable attestations | ❌ | ❌ | ✅ |
+
+Features marked ❌ at a given level either cannot function or provide no meaningful security guarantee without the required anchoring infrastructure.
+
+### 14.4 Why Blockchain?
+
+Traditional approaches to immutability (centralized databases, certificate transparency logs) require trusting a single operator. Blockchain provides:
+
+1. **No single point of trust** — Verification does not depend on any one organization
+2. **Append-only by cryptographic proof** — Not by policy or access control
+3. **Globally verifiable** — Any party with internet access can verify any anchor
+4. **Censorship resistant** — No single entity can delete or modify anchored records
+5. **Time-stamping by consensus** — Block timestamps are agreed upon by network validators, not self-reported
+
+For AI agent ecosystems where agents operate across organizational boundaries, perform financially consequential work, and build long-term reputations, these properties are not optional luxuries — they are foundational requirements.
+
+### 14.5 Recommended Blockchain Architecture
+
+Based on production experience with agent identity systems:
+
+**Primary chain: EVM-compatible Layer 2**
+- Low cost (~$0.005-0.02 per transaction)
+- High throughput (sub-second finality)
+- Full EVM compatibility (standard Solidity tooling)
+- Inherits security from Ethereum L1
+
+**Smart contract pattern:**
+```solidity
+contract AgentIdentityRegistry {
+    struct AnchorRecord {
+        bytes32 snapshotHash;
+        address owner;
+        uint256 timestamp;
+        uint256 blockNumber;
+        bool frozen;
+    }
+
+    mapping(bytes32 => AnchorRecord) public anchors;  // agentDid hash → record
+
+    function anchor(bytes32 agentDidHash, bytes32 snapshotHash) external;
+    function verify(bytes32 agentDidHash) external view returns (AnchorRecord memory);
+    function freeze(bytes32 agentDidHash) external;  // owner only
+}
+```
+
+**Batch anchoring pattern:**
+```solidity
+function anchorBatch(bytes32 merkleRoot, uint256 itemCount) external;
+function verifyBatchInclusion(
+    bytes32 merkleRoot,
+    bytes32 leafHash,
+    bytes32[] calldata proof
+) external pure returns (bool);
+```
+
+**Cost optimization:**
+- Batch anchoring every 5 minutes (collect hashes → Merkle tree → anchor root)
+- Individual Merkle proofs stored off-chain (database or IPFS)
+- Full payload stored off-chain; only hashes committed on-chain
+- Result: ~100x cost reduction vs individual anchoring
+
+### 14.6 Degraded Mode
+
+Implementations operating at Level 2 or Level 3 SHOULD support graceful degradation:
+
+- If the blockchain provider is temporarily unavailable, operations SHOULD continue locally
+- Unanchored artifacts MUST be queued for anchoring when connectivity resumes
+- The `anchoring` field in artifacts MUST accurately reflect anchor status:
+  - `null` or absent: not yet anchored
+  - `{"status": "pending"}`: queued for anchoring
+  - `{"status": "confirmed", "tx_hash": "0x...", "block": 123}`: successfully anchored
+
+Implementations MUST NOT claim Level 2 or Level 3 compliance if anchoring is permanently disabled.
+
+---
+
+## 15. Security Considerations
+
+### Without Blockchain Anchoring
+
+Implementations operating at Trust Level 1 (APS Basic) face the following risks
+that cannot be mitigated without blockchain anchoring:
+
+- **Timestamp forgery**: Self-reported timestamps can be backdated or future-dated.
+  An agent could claim work was completed before it actually was.
+- **Silent document replacement**: A passport can be completely replaced without
+  detection. There is no proof-of-existence for the previous version.
+- **Heritage fabrication**: Lineage claims cannot be verified against an immutable
+  record. An agent could claim descent from a high-reputation ancestor without proof.
+- **Attestation repudiation**: An issuer can deny having issued an attestation,
+  or silently revoke it without any verifiable record.
+- **Split-brain identity**: An agent could present different passports to different
+  platforms with no way to detect the inconsistency.
+
+These risks are acceptable in trusted, single-organization environments but
+are critical vulnerabilities in open, multi-organization agent ecosystems.
+
+---
+
 ## References
 
 - [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) — Key words for use in RFCs

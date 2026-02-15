@@ -134,16 +134,17 @@ document authors.  All rights reserved.
 9. Collaboration History
 10. Anchoring
 11. Attestation Exchange
-12. Canonicalization and Hashing
-13. Cryptographic Operations
-14. Conformance
-15. Security Considerations
-16. IANA Considerations
-17. References
-18. Appendix A: JSON Schemas
-19. Appendix B: Test Vectors
-20. Appendix C: Implementation Notes
-21. Authors' Addresses
+12. Trust Levels and Blockchain Anchoring Requirement
+13. Canonicalization and Hashing
+14. Cryptographic Operations
+15. Conformance
+16. Security Considerations
+17. IANA Considerations
+18. References
+19. Appendix A: JSON Schemas
+20. Appendix B: Test Vectors
+21. Appendix C: Implementation Notes
+22. Authors' Addresses
 
 
 # 1. Introduction
@@ -1105,9 +1106,224 @@ Attestations have a lifecycle:
    revocations before accepting attestations.
 
 
-# 12. Canonicalization and Hashing
+# 12. Trust Levels and Blockchain Anchoring Requirement
 
-## 12.1. JSON Canonicalization Scheme (JCS)
+## 12.1. Overview
+
+The Agent Passport Standard operates at three trust levels.  Each
+level provides progressively stronger security guarantees.
+Implementations MUST clearly declare which trust level they support.
+
+Without blockchain anchoring, APS provides format standardization and
+cryptographic signatures — but cannot guarantee immutability,
+verifiable timestamps, or cross-platform trust.  Blockchain anchoring
+transforms APS from a format standard into a security standard.
+
+## 12.2. Trust Levels
+
+### 12.2.1. Level 1: APS Basic (No Blockchain Required)
+
+Provides:
+
+-  Standardized JSON format for agent identity, work, and security
+-  Ed25519 digital signatures proving authorship
+-  Keccak-256 hash chains for snapshot versioning
+-  Local verification of document integrity
+
+Limitations:
+
+-  Timestamps are self-reported (signer can backdate)
+-  Document replacement is undetectable (no external proof of
+   existence)
+-  Cross-platform verification relies entirely on trusting the signer
+-  Heritage and lineage claims cannot be independently verified
+-  Attestation revocation is not enforceable
+
+Suitable for: Internal agent systems, development/testing, single-
+organization deployments where all participants trust each other.
+
+### 12.2.2. Level 2: APS Anchored (Blockchain Required)
+
+Provides everything in Level 1, plus:
+
+-  Immutable proof-of-existence for all artifacts (passport, receipt,
+   envelope)
+-  Verifiable timestamps tied to block numbers (cannot be forged or
+   backdated)
+-  Tamper detection — any modification after anchoring is detectable
+-  Batch anchoring via Merkle trees for cost efficiency
+-  Cross-organization verification without mutual trust
+
+Implementation pattern:
+
+1.  Agent creates/updates passport, computes keccak-256 hash
+2.  Hash is committed to an EVM-compatible blockchain
+3.  Smart contract stores: mapping(bytes32 => AnchorRecord) with
+    hash, timestamp, owner
+4.  Any verifier can call the contract to confirm the hash was
+    anchored at a specific time
+5.  Batch mode: multiple hashes combined into a Merkle tree, only
+    root anchored on-chain
+
+Cost considerations:
+
+-  Individual anchor: ~$0.005-0.02 per transaction on L2 chains
+-  Batch anchor (100 hashes): ~$0.005-0.02 total (Merkle root only)
+-  Monthly cost for 10,000 active agents: ~$5-20 on L2
+
+Suitable for: Production agent marketplaces, multi-organization
+deployments, any system where participants do not fully trust each
+other.
+
+### 12.2.3. Level 3: APS Full (Blockchain + On-Chain Attestations)
+
+Provides everything in Level 2, plus:
+
+-  Attestations anchored on-chain with revocation capability
+-  Heritage and lineage DAG anchored immutably
+-  Memory vault integrity proofs on-chain
+-  On-chain governance for benchmark evolution
+-  Smart contract-based agent identity registry
+-  Owner identity verification via selective disclosure
+
+Implementation pattern:
+
+1.  Agent Identity Registry contract:
+    register(did, snapshotHash, ownerHash)
+2.  Attestation anchoring:
+    anchorAttestation(agentDid, attestationType, hash)
+3.  Batch work events: anchorWorkBatch(merkleRoot, eventCount)
+4.  Heritage tracking:
+    registerLineage(childDid, parentDids[], generation)
+5.  Governance: proposeEvolution(suiteId, newVersion) with voting
+
+Suitable for: High-assurance environments, regulated industries,
+platforms where agent work has financial or legal consequences.
+
+## 12.3. Feature-to-Level Mapping
+
+The following table specifies the MINIMUM trust level required for
+each APS feature:
+
+| Feature | Basic | Anchored | Full |
+|---------|-------|----------|------|
+| Agent Passport (create, sign, verify) | YES | YES | YES |
+| Work Receipt (lifecycle events) | YES | YES | YES |
+| Security Envelope (sandbox constraints) | YES | YES | YES |
+| Snapshot hash chain | YES | YES | YES |
+| Verifiable timestamps | NO | YES | YES |
+| Tamper detection (post-anchor) | NO | YES | YES |
+| Cross-platform verification | NO | YES | YES |
+| Batch proof (Merkle trees) | NO | YES | YES |
+| Heritage & Lineage tracking | NO | NO | YES |
+| Attestation Exchange (cross-platform) | NO | NO | YES |
+| Memory Vault integrity proof | NO | NO | YES |
+| Benchmark governance | NO | NO | YES |
+| On-chain agent identity registry | NO | NO | YES |
+| Revocable attestations | NO | NO | YES |
+
+Features marked NO at a given level either cannot function or provide
+no meaningful security guarantee without the required anchoring
+infrastructure.
+
+## 12.4. Why Blockchain?
+
+Traditional approaches to immutability (centralized databases,
+certificate transparency logs) require trusting a single operator.
+Blockchain provides:
+
+1.  No single point of trust — Verification does not depend on any
+    one organization
+2.  Append-only by cryptographic proof — Not by policy or access
+    control
+3.  Globally verifiable — Any party with internet access can verify
+    any anchor
+4.  Censorship resistant — No single entity can delete or modify
+    anchored records
+5.  Time-stamping by consensus — Block timestamps are agreed upon by
+    network validators, not self-reported
+
+For AI agent ecosystems where agents operate across organizational
+boundaries, perform financially consequential work, and build long-
+term reputations, these properties are not optional luxuries — they
+are foundational requirements.
+
+## 12.5. Recommended Blockchain Architecture
+
+Based on production experience with agent identity systems:
+
+Primary chain: EVM-compatible Layer 2
+
+-  Low cost (~$0.005-0.02 per transaction)
+-  High throughput (sub-second finality)
+-  Full EVM compatibility (standard Solidity tooling)
+-  Inherits security from Ethereum L1
+
+Smart contract pattern:
+
+~~~
+contract AgentIdentityRegistry {
+    struct AnchorRecord {
+        bytes32 snapshotHash;
+        address owner;
+        uint256 timestamp;
+        uint256 blockNumber;
+        bool frozen;
+    }
+
+    mapping(bytes32 => AnchorRecord) public anchors;
+
+    function anchor(bytes32 agentDidHash, bytes32 snapshotHash)
+        external;
+    function verify(bytes32 agentDidHash)
+        external view returns (AnchorRecord memory);
+    function freeze(bytes32 agentDidHash) external;
+}
+~~~
+
+Batch anchoring pattern:
+
+~~~
+function anchorBatch(bytes32 merkleRoot, uint256 itemCount)
+    external;
+function verifyBatchInclusion(
+    bytes32 merkleRoot,
+    bytes32 leafHash,
+    bytes32[] calldata proof
+) external pure returns (bool);
+~~~
+
+Cost optimization:
+
+-  Batch anchoring every 5 minutes (collect hashes, build Merkle
+   tree, anchor root)
+-  Individual Merkle proofs stored off-chain (database or IPFS)
+-  Full payload stored off-chain; only hashes committed on-chain
+-  Result: ~100x cost reduction vs individual anchoring
+
+## 12.6. Degraded Mode
+
+Implementations operating at Level 2 or Level 3 SHOULD support
+graceful degradation:
+
+-  If the blockchain provider is temporarily unavailable, operations
+   SHOULD continue locally
+-  Unanchored artifacts MUST be queued for anchoring when connectivity
+   resumes
+-  The "anchoring" field in artifacts MUST accurately reflect anchor
+   status:
+   -  null or absent: not yet anchored
+   -  {"status": "pending"}: queued for anchoring
+   -  {"status": "confirmed", "tx_hash": "0x...", "block": 123}:
+      successfully anchored
+
+Implementations MUST NOT claim Level 2 or Level 3 compliance if
+anchoring is permanently disabled.
+
+
+# 13. Canonicalization and Hashing
+
+## 13.1. JSON Canonicalization Scheme (JCS)
 
 All hashing and signing operations in this standard use the JSON
 Canonicalization Scheme defined in [RFC8785].
@@ -1125,7 +1341,7 @@ Implementations MUST use a conforming JCS implementation.  Ad-hoc
 JSON serialization that does not guarantee these properties MUST NOT
 be used.
 
-## 12.2. Keccak-256
+## 13.2. Keccak-256
 
 All content hashes in this standard use Keccak-256 [KECCAK] (the
 pre-NIST variant, as used in Ethereum).  This is NOT the NIST SHA-3
@@ -1138,7 +1354,7 @@ characters, total 66 characters).
 Implementations MUST verify that the output is exactly 66 characters
 including the `0x` prefix.
 
-## 12.3. Hash Computation
+## 13.3. Hash Computation
 
 The general hash computation for any APS artifact is:
 
@@ -1151,9 +1367,9 @@ removed.  If the object does not contain a `proof` field, the entire
 object is hashed.
 
 
-# 13. Cryptographic Operations
+# 14. Cryptographic Operations
 
-## 13.1. Ed25519
+## 14.1. Ed25519
 
 All signatures in this standard use Ed25519 as defined in [RFC8032].
 
@@ -1169,7 +1385,7 @@ Signature format:
 - The `proofValue` is multibase-encoded (z-base58btc) over the raw
   64-byte Ed25519 signature.
 
-## 13.2. AES-256-GCM
+## 14.2. AES-256-GCM
 
 Used for Memory Vault encryption (Section 8):
 
@@ -1179,7 +1395,7 @@ Used for Memory Vault encryption (Section 8):
 - Each encryption operation MUST use a unique IV.
 - Implementations MUST NOT reuse an IV with the same key.
 
-## 13.3. Merkle Trees
+## 14.3. Merkle Trees
 
 Batch proofs (Section 4.6) use binary Merkle trees:
 
@@ -1200,9 +1416,9 @@ Tree construction:
    promoted to the next level without hashing.
 
 
-# 14. Conformance
+# 15. Conformance
 
-## 14.1. Conformance Levels
+## 15.1. Conformance Levels
 
 Three conformance levels are defined:
 
@@ -1233,12 +1449,12 @@ All Level 2 requirements, plus:
 - Benchmark attestation claims MUST be verified.
 - Trust signals MUST be derived only from verified Work Receipts.
 
-## 14.2. Test Vectors
+## 15.2. Test Vectors
 
 Implementations MUST pass the test vectors defined in
 `test-vectors.json` (see Appendix B).
 
-## 14.3. Test Vector Format
+## 15.3. Test Vector Format
 
 Each test vector is a JSON object with:
 
@@ -1248,7 +1464,7 @@ Each test vector is a JSON object with:
 - `expected_output` — Object.  Expected result.
 - `notes` — String.  Additional context.  OPTIONAL.
 
-## 14.4. Conformance Assertion
+## 15.4. Conformance Assertion
 
 Implementations claiming conformance to this specification MUST
 declare their conformance level and MUST pass all test vectors for
@@ -1259,9 +1475,9 @@ that level.  A conformance assertion has the form:
 ```
 
 
-# 15. Security Considerations
+# 16. Security Considerations
 
-## 15.1. Key Management
+## 16.1. Key Management
 
 Agent identity is bound to an Ed25519 key pair.  Compromise of the
 private key allows full impersonation of the agent, including signing
@@ -1280,7 +1496,7 @@ Implementations SHOULD:
 - Use OS-level keychain or secret management services.
 - Implement key usage auditing.
 
-## 15.2. Replay Attacks
+## 16.2. Replay Attacks
 
 Signatures are bound to the content of the signed document.  However,
 a valid signed artifact could be replayed in a different context.
@@ -1294,14 +1510,14 @@ Mitigations:
 - Anchoring provides timestamp evidence that can be independently
   verified.
 
-## 15.3. Timing Attacks
+## 16.3. Timing Attacks
 
 When verifying Ed25519 signatures or comparing hash values,
 implementations MUST use constant-time comparison functions.
 Variable-time comparison can leak information about the expected value
 through timing side channels.
 
-## 15.4. DID Resolution Attacks
+## 16.4. DID Resolution Attacks
 
 The `did:key` method embeds the public key directly in the identifier,
 avoiding external resolution.  However:
@@ -1313,7 +1529,7 @@ avoiding external resolution.  However:
   a malicious public key.
 - Implementations SHOULD cache resolved DIDs and detect changes.
 
-## 15.5. Anchoring Provider Trust
+## 16.5. Anchoring Provider Trust
 
 Anchoring provides tamper evidence, not tamper prevention.  The
 security of anchoring depends on the integrity of the underlying
@@ -1328,7 +1544,7 @@ ledger.
 - Implementations SHOULD support multiple anchoring providers to
   reduce single-provider risk.
 
-## 15.6. Memory Vault Key Loss
+## 16.6. Memory Vault Key Loss
 
 Memory Vault encryption is designed to be irreversible without the
 owner's key.  If the owner loses the encryption key:
@@ -1340,7 +1556,7 @@ owner's key.  If the owner loses the encryption key:
 - Implementations SHOULD warn owners about the consequences of key
   loss during vault creation.
 
-## 15.7. Cross-Platform Attestation Trust
+## 16.7. Cross-Platform Attestation Trust
 
 Attestations from external platforms carry varying levels of trust:
 
@@ -1352,7 +1568,7 @@ Attestations from external platforms carry varying levels of trust:
   is available.
 - Implementations SHOULD implement attestation freshness checks.
 
-## 15.8. Canonicalization Attacks
+## 16.8. Canonicalization Attacks
 
 Incorrect canonicalization can cause signature verification failures
 or, worse, allow two different JSON documents to produce the same
@@ -1365,7 +1581,7 @@ canonical form:
 - Numeric precision: implementations MUST handle IEEE 754
   double-precision correctly per RFC 8785 Section 3.2.2.5.
 
-## 15.9. Denial of Service
+## 16.9. Denial of Service
 
 - Deeply nested JSON structures could cause stack overflow during
   canonicalization.  Implementations SHOULD impose a maximum nesting
@@ -1376,12 +1592,35 @@ canonical form:
 - Merkle tree batch sizes should be bounded.  Implementations SHOULD
   impose a maximum batch size (RECOMMENDED: 65536 receipts).
 
+## 16.10. Without Blockchain Anchoring
 
-# 16. IANA Considerations
+Implementations operating at Trust Level 1 (APS Basic) face the
+following risks that cannot be mitigated without blockchain anchoring:
 
-## 16.1. Media Types
+-  Timestamp forgery: Self-reported timestamps can be backdated or
+   future-dated.  An agent could claim work was completed before it
+   actually was.
+-  Silent document replacement: A passport can be completely replaced
+   without detection.  There is no proof-of-existence for the
+   previous version.
+-  Heritage fabrication: Lineage claims cannot be verified against an
+   immutable record.  An agent could claim descent from a high-
+   reputation ancestor without proof.
+-  Attestation repudiation: An issuer can deny having issued an
+   attestation, or silently revoke it without any verifiable record.
+-  Split-brain identity: An agent could present different passports
+   to different platforms with no way to detect the inconsistency.
 
-### 16.1.1. application/agent-passport+json
+These risks are acceptable in trusted, single-organization
+environments but are critical vulnerabilities in open, multi-
+organization agent ecosystems.
+
+
+# 17. IANA Considerations
+
+## 17.1. Media Types
+
+### 17.1.1. application/agent-passport+json
 
 Type name: application
 
@@ -1421,7 +1660,7 @@ Author: Cezary Grotowski
 
 Change controller: IETF
 
-### 16.1.2. application/work-receipt+json
+### 17.1.2. application/work-receipt+json
 
 Type name: application
 
@@ -1449,7 +1688,7 @@ Author: Cezary Grotowski
 
 Change controller: IETF
 
-### 16.1.3. application/security-envelope+json
+### 17.1.3. application/security-envelope+json
 
 Type name: application
 
@@ -1477,13 +1716,13 @@ Author: Cezary Grotowski
 
 Change controller: IETF
 
-## 16.2. URI Schemes
+## 17.2. URI Schemes
 
 This specification uses the `did:key` URI scheme as defined by the
 W3C Decentralized Identifiers specification [W3C.DID-CORE].  No new
 URI scheme registration is requested.
 
-## 16.3. Context URL
+## 17.3. Context URL
 
 The canonical context URL for APS v1.0 is:
 
@@ -1498,9 +1737,9 @@ APS vocabulary.  Sub-contexts:
 - `https://agentpassport.org/v1.0/vault` — Memory Vault context.
 
 
-# 17. References
+# 18. References
 
-## 17.1. Normative References
+## 18.1. Normative References
 
 - **[RFC2119]** Bradner, S., "Key words for use in RFCs to Indicate
   Requirement Levels", BCP 14, RFC 2119, DOI 10.17487/RFC2119,
@@ -1519,7 +1758,7 @@ APS vocabulary.  Sub-contexts:
   Transparency", RFC 6962, DOI 10.17487/RFC6962, June 2013,
   <https://www.rfc-editor.org/rfc/rfc6962>.
 
-## 17.2. Informative References
+## 18.2. Informative References
 
 - **[W3C.DID-CORE]** Sporny, M., Longley, D., Sabadello, M., Reed,
   D., Steele, O., and C. Allen, "Decentralized Identifiers (DIDs)

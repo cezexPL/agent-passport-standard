@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.0.1 — 2026-02-15
+
+### Trust Levels & Blockchain Anchoring Requirement
+- **Section 14 (SPECIFICATION.md) / Section 12 (RFC draft): Trust Levels & Blockchain Anchoring Requirement** — Defined three trust levels (Basic, Anchored, Full) with progressively stronger security guarantees. Blockchain anchoring is now REQUIRED for heritage tracking, cross-platform attestation exchange, memory vault integrity proofs, and on-chain identity registry (Level 3). Level 2 (Anchored) requires blockchain for verifiable timestamps, tamper detection, and cross-platform verification.
+- Added Feature-to-Level Mapping table specifying minimum trust level for each APS feature.
+- Added recommended EVM-compatible L2 blockchain architecture with smart contract patterns and cost optimization guidance.
+- Added Degraded Mode requirements for Level 2/3 implementations.
+- **Section 15 (SPECIFICATION.md) / Section 16.10 (RFC draft): Security Considerations — Without Blockchain Anchoring** — New subsection documenting risks of operating at Trust Level 1: timestamp forgery, silent document replacement, heritage fabrication, attestation repudiation, and split-brain identity.
+- Updated README.md with Trust Levels summary table.
+
 ## v1.0.0 — 2026-02-15
 
 ### RFC-Style Internet-Draft
