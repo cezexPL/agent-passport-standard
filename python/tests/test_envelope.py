@@ -89,6 +89,6 @@ def test_sign_verify():
 def test_from_json_roundtrip():
     e = SecurityEnvelope.new(_cfg())
     data = e.to_json()
-    e2 = SecurityEnvelope.from_json(data)
+    e2 = SecurityEnvelope.from_json(data, validate=False)
     assert e2.agent_did == e.agent_did
     assert e2.envelope_hash == e.envelope_hash

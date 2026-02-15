@@ -121,9 +121,16 @@ class WorkReceipt:
     def to_json(self) -> bytes:
         return crypto.canonicalize_json(self.to_dict())
 
+    def validate(self) -> None:
+        from aps.validate import validate_receipt
+        validate_receipt(self.to_dict())
+
     @staticmethod
-    def from_json(data: bytes | str) -> "WorkReceipt":
+    def from_json(data: bytes | str, validate: bool = True) -> "WorkReceipt":
         raw = json.loads(data)
+        if validate:
+            from aps.validate import validate_receipt
+            validate_receipt(raw)
         r = WorkReceipt()
         r.context = raw.get("@context", "")
         r.spec_version = raw.get("spec_version", "")

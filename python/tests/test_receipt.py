@@ -69,6 +69,6 @@ def test_from_json_roundtrip():
     r.add_event({"type": "claim", "timestamp": "2026-02-14T01:00:00Z",
                  "payload_hash": "0x01", "signature": "s"})
     data = r.to_json()
-    r2 = WorkReceipt.from_json(data)
+    r2 = WorkReceipt.from_json(data, validate=False)
     assert r2.receipt_id == r.receipt_id
     assert len(r2.events) == 1

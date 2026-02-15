@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schemas/dna.schema.json",
+  "title": "Agent DNA",
+  "description": "Agent Passport Standard v0.2 — Agent DNA document schema.",
+  "type": "object",
+  "required": ["@context", "type", "agent_id", "version", "skills", "soul", "policies", "dna_hash", "frozen"],
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "const": "https://agentpassport.org/v0.2/dna"
+    },
+    "type": {
+      "const": "AgentDNA"
+    },
+    "agent_id": {
+      "type": "string",
+      "pattern": "^did:key:z6Mk[A-Za-z0-9]+$",
+      "description": "DID of the owning agent."
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Snapshot version this DNA corresponds to."
+    },
+    "skills": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/SkillEntry" },
+      "description": "Agent capabilities."
+    },
+    "soul": {
+      "$ref": "#/$defs/Soul"
+    },
+    "policies": {
+      "$ref": "#/$defs/Policies"
+    },
+    "dna_hash": {
+      "$ref": "#/$defs/Hex256",
+      "description": "keccak256(canonicalize({skills, soul, policies}))"
+    },
+    "frozen": {
+      "type": "boolean",
+      "description": "Whether this DNA is frozen (immutable)."
+    },
+    "mutation_reason": {
+      "type": ["string", "null"],
+      "description": "Reason for the most recent mutation. OPTIONAL."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "Hex256": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{64}$"
+    },
+    "SkillEntry": {
+      "type": "object",
+      "required": ["name", "version", "description", "capabilities"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "description": { "type": "string" },
+        "proficiency": { "type": "number", "minimum": 0, "maximum": 1 },
+        "capabilities": { "type": "array", "items": { "type": "string" } },
+        "tool_integrations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "protocol": { "type": "string" },
+              "endpoint": { "type": "string", "format": "uri" }
+            }
+          }
+        },
+        "origin": { "type": "string", "description": "DID or source of this skill." },
+        "hash": { "$ref": "#/$defs/Hex256" }
+      }
+    },
+    "Soul": {
+      "type": "object",
+      "required": ["personality", "work_style", "constraints"],
+      "properties": {
+        "personality": { "type": "string" },
+        "work_style": { "type": "string" },
+        "constraints": { "type": "array", "items": { "type": "string" } },
+        "values": { "type": "array", "items": { "type": "string" } },
+        "traits": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "Policies": {
+      "type": "object",
+      "required": ["policy_set_hash", "summary"],
+      "properties": {
+        "policy_set_hash": { "$ref": "#/$defs/Hex256" },
+        "summary": { "type": "array", "items": { "type": "string" } },
+        "allows": { "type": "array", "items": { "type": "string" } },
+        "denies": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

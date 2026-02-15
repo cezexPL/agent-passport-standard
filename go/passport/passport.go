@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/agent-passport/standard-go/crypto"
+	"github.com/cezexPL/agent-passport-standard/go/crypto"
+	"github.com/cezexPL/agent-passport-standard/go/validate"
 )
 
 // AgentPassport is the top-level passport document.
@@ -276,8 +277,26 @@ func (p *AgentPassport) JSON() ([]byte, error) {
 	return crypto.CanonicalizeJSON(p)
 }
 
-// FromJSON parses an AgentPassport from JSON.
-func FromJSON(data []byte) (*AgentPassport, error) {
+// Validate validates the passport against the JSON schema.
+func (p *AgentPassport) Validate() error {
+	data, err := json.Marshal(p)
+	if err != nil {
+		return err
+	}
+	return validate.ValidatePassport(data)
+}
+
+// FromJSON parses an AgentPassport from JSON. Set validate to true to run schema validation.
+func FromJSON(data []byte, opts ...bool) (*AgentPassport, error) {
+	doValidate := true
+	if len(opts) > 0 {
+		doValidate = opts[0]
+	}
+	if doValidate {
+		if err := validate.ValidatePassport(data); err != nil {
+			return nil, fmt.Errorf("schema validation: %w", err)
+		}
+	}
 	var p AgentPassport
 	if err := json.Unmarshal(data, &p); err != nil {
 		return nil, fmt.Errorf("unmarshal: %w", err)

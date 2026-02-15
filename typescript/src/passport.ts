@@ -1,5 +1,6 @@
 import type { AgentPassportData, PassportConfig, Proof, Skill } from './types.js';
 import { canonicalizeJson, ed25519Sign, ed25519Verify, snapshotHash, hashExcludingFields } from './crypto.js';
+import { validatePassport as validatePassportSchema } from './validate.js';
 
 export class AgentPassport {
   data: AgentPassportData;
@@ -53,8 +54,14 @@ export class AgentPassport {
     return new AgentPassport(data);
   }
 
-  static fromJson(json: string): AgentPassport {
-    return new AgentPassport(JSON.parse(json) as AgentPassportData);
+  validate(): void {
+    validatePassportSchema(this.data);
+  }
+
+  static fromJson(json: string, validate = true): AgentPassport {
+    const data = JSON.parse(json) as AgentPassportData;
+    if (validate) validatePassportSchema(data);
+    return new AgentPassport(data);
   }
 
   toJson(): string {

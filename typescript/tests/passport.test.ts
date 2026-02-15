@@ -73,7 +73,7 @@ describe('AgentPassport', () => {
 
     const passport = await AgentPassport.create(cfg);
     const json = passport.toJson();
-    const restored = AgentPassport.fromJson(json);
+    const restored = AgentPassport.fromJson(json, false);
     expect(restored.data.id).toBe(passport.data.id);
     expect(restored.hash()).toBe(passport.hash());
   });

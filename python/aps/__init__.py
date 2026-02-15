@@ -11,6 +11,14 @@ from .crypto import (
     generate_key_pair,
     MerkleTree,
     verify_proof,
+    timing_safe_equal,
+    validate_did,
+    validate_hash,
+    validate_signature,
+    validate_timestamp,
+    validate_version,
+    validate_trust_tier,
+    validate_attestation_count,
 )
 from .passport import AgentPassport, PassportConfig, Skill, Soul, Policies, Lineage
 from .receipt import WorkReceipt, ReceiptConfig

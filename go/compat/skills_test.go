@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/agent-passport/standard-go/passport"
+	"github.com/cezexPL/agent-passport-standard/go/passport"
 )
 
 func TestImportAgentSkill(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/agent-passport/standard-go/crypto"
+	"github.com/cezexPL/agent-passport-standard/go/crypto"
 )
 
 func main() {

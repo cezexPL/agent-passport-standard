@@ -1,22 +1,44 @@
 {
-  "name": "@APS/sdk",
-  "version": "0.1.0",
+  "name": "aps-sdk",
+  "version": "1.0.0",
+  "description": "Agent Passport Standard (APS) — TypeScript SDK",
+  "author": "Cezary Grotowski <c.grotowski@gmail.com>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cezexPL/agent-passport-standard.git",
+    "directory": "typescript"
+  },
+  "keywords": [
+    "agent",
+    "passport",
+    "identity",
+    "ai",
+    "trust",
+    "ed25519",
+    "keccak"
+  ],
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
     }
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run"
   },
   "dependencies": {
+    "@noble/ed25519": "^2.2.3",
     "@noble/hashes": "^1.7.1",
-    "@noble/ed25519": "^2.2.3"
+    "ajv": "^8.18.0",
+    "ajv-formats": "^3.0.1"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

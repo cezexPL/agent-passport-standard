@@ -3,7 +3,7 @@ package passport
 import (
 	"testing"
 
-	"github.com/agent-passport/standard-go/crypto"
+	"github.com/cezexPL/agent-passport-standard/go/crypto"
 )
 
 func testConfig() Config {
@@ -128,7 +128,7 @@ func TestFromJSON_Roundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	p2, err := FromJSON(data)
+	p2, err := FromJSON(data, false)
 	if err != nil {
 		t.Fatal(err)
 	}

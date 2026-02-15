@@ -91,7 +91,7 @@ func VerifyProof(leaf, root string, proof []string, index int) bool {
 		}
 		idx /= 2
 	}
-	return current == root
+	return TimingSafeEqual(current, root)
 }
 
 func hashPair(a, b string) string {

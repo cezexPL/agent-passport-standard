@@ -1,7 +1,10 @@
 """Cryptographic primitives for the Agent Passport Standard v0.1."""
 from __future__ import annotations
 
+import hmac
 import json
+import re
+from datetime import datetime
 from typing import Any
 
 from Crypto.Hash import keccak as _keccak_mod
@@ -161,4 +164,74 @@ def verify_proof(leaf: str, root: str, proof: list[str], index: int) -> bool:
         else:
             current = _hash_pair(sibling, current)
         idx //= 2
-    return current == root
+    return timing_safe_equal(current, root)
+
+
+# ---------------------------------------------------------------------------
+# Timing-safe comparison
+# ---------------------------------------------------------------------------
+
+def timing_safe_equal(a: str, b: str) -> bool:
+    """Constant-time string comparison to prevent timing attacks."""
+    return hmac.compare_digest(a.encode(), b.encode())
+
+
+# ---------------------------------------------------------------------------
+# Input Validation
+# ---------------------------------------------------------------------------
+
+_DID_RE = re.compile(r"^did:key:z6Mk[A-Za-z0-9]+$")
+_HASH_RE = re.compile(r"^0x[0-9a-fA-F]{64}$")
+_SIG_RE = re.compile(r"^[0-9a-fA-F]{128}$")
+
+
+def validate_did(s: str) -> None:
+    """Validate DID format (did:key:z6Mk...)."""
+    if not s:
+        raise ValueError("DID must not be empty")
+    if not _DID_RE.match(s):
+        raise ValueError(f"invalid DID format: {s}")
+
+
+def validate_hash(s: str) -> None:
+    """Validate hash format (0x + 64 hex chars)."""
+    if not s:
+        raise ValueError("hash must not be empty")
+    if not _HASH_RE.match(s):
+        raise ValueError(f"invalid hash format: {s}")
+
+
+def validate_signature(s: str) -> None:
+    """Validate Ed25519 signature (128 hex chars)."""
+    if not s:
+        raise ValueError("signature must not be empty")
+    if not _SIG_RE.match(s):
+        raise ValueError(f"invalid signature format: {s}")
+
+
+def validate_timestamp(s: str) -> None:
+    """Validate ISO 8601 timestamp."""
+    if not s:
+        raise ValueError("timestamp must not be empty")
+    try:
+        datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        raise ValueError(f"invalid timestamp: {s}")
+
+
+def validate_version(v: int) -> None:
+    """Validate version is positive integer."""
+    if not isinstance(v, int) or v < 1:
+        raise ValueError(f"version must be positive integer, got {v}")
+
+
+def validate_trust_tier(t: int) -> None:
+    """Validate trust tier is 0-3."""
+    if not isinstance(t, int) or t < 0 or t > 3:
+        raise ValueError(f"trust tier must be 0-3, got {t}")
+
+
+def validate_attestation_count(c: int) -> None:
+    """Validate attestation count is non-negative."""
+    if not isinstance(c, int) or c < 0:
+        raise ValueError(f"attestation count must be non-negative, got {c}")

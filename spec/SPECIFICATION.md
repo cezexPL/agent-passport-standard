@@ -608,6 +608,142 @@ Trust signals are OPTIONAL and SHOULD be computed from verified Work Receipts on
 
 ---
 
+## 13. Attestation Exchange Protocol
+
+### 13.1 Overview
+
+Cross-platform attestation exchange enables platforms to verify agent credentials issued by other platforms. This section defines the protocol for presenting, verifying, and trusting attestations across organizational boundaries.
+
+Attestation exchange builds on existing W3C Verifiable Credentials infrastructure and the Ed25519 signature scheme defined in §6.1.
+
+### 13.2 Exchange Flow
+
+1. **Present** — Agent presents an attestation issued by Platform A to Platform B.
+2. **Resolve** — Platform B fetches the issuer's public key via DID resolution (`did:key` decoding or DID Document retrieval).
+3. **Verify Signature** — Platform B verifies the attestation's Ed25519 signature against the issuer's public key.
+4. **Check Revocation** — Platform B checks the attestation's revocation status (OPTIONAL, see §13.5).
+5. **Check Expiry** — Platform B rejects attestations where `expirationDate` is in the past.
+6. **Trust Decision** — Platform B accepts or rejects the attestation based on its trust policy (see §13.4).
+
+### 13.3 Attestation Format (W3C VC)
+
+Attestations MUST conform to the [W3C Verifiable Credentials Data Model](https://www.w3.org/TR/vc-data-model/) with the following structure:
+
+```json
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://agentpassport.org/v0.2/attestation"
+  ],
+  "type": ["VerifiableCredential", "AgentAttestation"],
+  "issuer": "did:key:z6Mk...",
+  "issuanceDate": "2026-01-15T12:00:00Z",
+  "expirationDate": "2027-01-15T12:00:00Z",
+  "credentialSubject": {
+    "id": "did:key:z6Mk...",
+    "type": "SkillVerification",
+    "claims": {
+      "skill": "go-backend",
+      "level": "expert",
+      "benchmark_score": 0.95
+    }
+  },
+  "proof": {
+    "type": "Ed25519Signature2020",
+    "created": "2026-01-15T12:00:00Z",
+    "verificationMethod": "did:key:z6Mk...#key-1",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "<hex-encoded Ed25519 signature>"
+  }
+}
+```
+
+#### 13.3.1 Required Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `@context` | array | MUST | Include both W3C VC and APS attestation contexts. |
+| `type` | array | MUST | Include `"VerifiableCredential"` and `"AgentAttestation"`. |
+| `issuer` | DID | MUST | DID of the issuing platform or agent. |
+| `issuanceDate` | Timestamp | MUST | ISO 8601 timestamp of issuance. |
+| `expirationDate` | Timestamp | OPTIONAL | ISO 8601 expiration. Verifiers MUST reject expired attestations. |
+| `credentialSubject` | object | MUST | Contains `id` (subject DID), `type`, and `claims`. |
+| `proof` | object | MUST | Ed25519Signature2020 proof. |
+
+#### 13.3.2 Attestation Types
+
+| Type | Description |
+|------|-------------|
+| `SkillVerification` | Verifies an agent possesses a specific skill at a given proficiency. |
+| `WorkCompletion` | Attests that an agent completed a specific job. |
+| `TrustTier` | Certifies the agent's trust tier level. |
+| `PlatformMembership` | Confirms the agent is registered on a platform. |
+| `BenchmarkResult` | Attests benchmark scores from a testing suite. |
+
+#### 13.3.3 Signature Computation
+
+The proof signature MUST be computed over the canonical JSON (RFC 8785) of the attestation document **excluding** the `proof` field:
+
+```
+message = canonicalize(attestation - proof)
+signature = Ed25519.sign(issuer_private_key, message)
+```
+
+### 13.4 Trust Registry
+
+A Trust Registry is an in-memory or persistent store of trusted issuer DIDs and their public keys. Platforms use the registry to decide whether to accept attestations.
+
+#### 13.4.1 Registry Operations
+
+- **RegisterIssuer(did, publicKey)** — Add a trusted issuer.
+- **RemoveIssuer(did)** — Remove a trusted issuer.
+- **IsTrusted(did) → bool** — Check if an issuer is trusted.
+- **GetPublicKey(did) → publicKey** — Retrieve the public key for signature verification.
+
+#### 13.4.2 Trust Policies
+
+Platforms SHOULD define trust policies that specify:
+
+- Which issuer DIDs are trusted.
+- Which attestation types are accepted.
+- Minimum required attestation count for trust tier promotion.
+- Maximum attestation age (staleness threshold).
+
+Trust policies are platform-specific and outside the scope of this specification. However, implementations SHOULD provide a pluggable trust policy interface.
+
+### 13.5 Revocation
+
+#### 13.5.1 Revocation List
+
+Issuers MAY publish a revocation list — an array of revoked attestation hashes:
+
+```json
+{
+  "issuer": "did:key:z6Mk...",
+  "revoked": [
+    "0xabcdef...",
+    "0x123456..."
+  ],
+  "updated_at": "2026-02-15T12:00:00Z"
+}
+```
+
+#### 13.5.2 Status Check
+
+Verifiers SHOULD check revocation status before accepting an attestation:
+
+1. Compute the attestation hash: `keccak256(canonicalize(attestation - proof))`.
+2. Query the issuer's revocation list.
+3. If the hash appears in the revoked list, reject the attestation.
+
+Revocation checking is OPTIONAL but RECOMMENDED for high-assurance scenarios.
+
+#### 13.5.3 Revocation Anchoring
+
+Revocation lists MAY be anchored on-chain using the anchoring provider interface (§4) for tamper evidence and timestamping.
+
+---
+
 ## References
 
 - [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) — Key words for use in RFCs

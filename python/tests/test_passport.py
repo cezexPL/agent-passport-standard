@@ -88,6 +88,6 @@ def test_from_json_roundtrip():
     pub_hex = pub.public_bytes(Encoding.Raw, PublicFormat.Raw).hex()
     p = AgentPassport.new(_make_cfg(pub_hex))
     data = p.to_json()
-    p2 = AgentPassport.from_json(data)
+    p2 = AgentPassport.from_json(data, validate=False)
     assert p2.id == p.id
     assert p2.snapshot["hash"] == p.snapshot["hash"]

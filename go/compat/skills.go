@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/agent-passport/standard-go/passport"
+	"github.com/cezexPL/agent-passport-standard/go/passport"
 )
 
 // AgentSkillFolder represents an Agent Skills folder structure.

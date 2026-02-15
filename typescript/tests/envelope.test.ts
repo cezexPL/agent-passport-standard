@@ -76,7 +76,7 @@ describe('SecurityEnvelope', () => {
   it('fromJson/toJson roundtrip', () => {
     const e = SecurityEnvelope.create(makeEnvelopeConfig());
     const json = e.toJson();
-    const restored = SecurityEnvelope.fromJson(json);
+    const restored = SecurityEnvelope.fromJson(json, false);
     expect(restored.hash()).toBe(e.hash());
   });
 });

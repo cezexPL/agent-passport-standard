@@ -1,5 +1,45 @@
 # Changelog
 
+## v1.0.0 — 2026-02-15
+
+### RFC-Style Internet-Draft
+- Reformatted entire specification as Internet-Draft (`draft-grotowski-aps-01`).
+- Added YAML front matter with RFC metadata, normative/informative references.
+- Added Abstract, Status of This Memo, and Table of Contents per RFC conventions.
+
+### New Sections
+- **Section 11: Attestation Exchange** — Cross-platform attestation structure, verification flow, trust registry interface, attestation lifecycle (issuance, presentation, verification, revocation).
+- **Section 12: Canonicalization and Hashing** — Dedicated section expanding RFC 8785 requirements, Keccak-256 specification (explicit NOT SHA-3), hash computation formula.
+- **Section 13: Cryptographic Operations** — Ed25519 key encoding and signature format, AES-256-GCM parameters for Memory Vault, Merkle tree construction with domain separation (0x00 leaf prefix, 0x01 node prefix).
+- **Section 14: Conformance** — Three conformance levels (Basic, Enhanced, Full) with explicit requirements per level. Test vector format. Conformance assertion template.
+- **Section 15: Security Considerations** — Comprehensive threat model: key management, replay attacks, timing attacks, DID resolution attacks, anchoring provider trust, memory vault key loss, cross-platform attestation trust, canonicalization attacks, denial of service.
+- **Section 16: IANA Considerations** — Media type registrations for `application/agent-passport+json`, `application/work-receipt+json`, `application/security-envelope+json`. Context URL `https://agentpassport.org/v1.0`.
+- **Section 17: References** — Normative (RFC 2119, RFC 8032, RFC 8785, RFC 6962) and Informative (W3C DID Core, W3C VC Data Model, Keccak, MCP, A2A).
+- **Appendix A: JSON Schemas** — Complete schema file listing.
+- **Appendix B: Test Vectors** — Reference to test-vectors.json with coverage categories.
+- **Appendix C: Implementation Notes** — Go, Python, TypeScript SDK structure and common pitfalls.
+
+### Expanded Sections (from v0.2)
+- **Introduction** — Added problem statement, motivation (4 requirements), scope (in/out), relationship to other standards table.
+- **Terminology** — Expanded to RFC 2119 definition list format with all domain terms.
+- **Agent Passport** — ABNF-like field specification, detailed field definitions (3.3.1–3.3.10), immutability rules, snapshot structure, proof computation.
+- **Work Receipt** — Full document structure, event type table with signer roles, evidence fields, snapshot binding, batch proof with batch_size.
+- **Security Envelope** — Capability string format (dot-separated hierarchical), sandbox runtime options expanded (added `container`), network allow-list detail, trust tier table.
+- **Agent DNA** — Skill origin field (`innate`, `learned`, `collaboration`, `inherited`).
+- **Lineage & Heritage** — Parent entry structure, generation computation for merge agents, cycle detection requirement.
+- **Memory Vault** — CSPRNG requirement for IV generation, explicit rejection behavior on failed key verification.
+- **Anchoring** — Commitment flow (4 steps), anchor receipt structure, verification requirements (3 checks).
+- **Merkle Trees** — Domain separation prefixes (0x00 for leaves, 0x01 for nodes), sorted sibling concatenation, odd-leaf promotion rule.
+
+### Breaking Changes from v0.2
+- `@context` changed from `"https://agentpassport.org/v0.1"` to `"https://agentpassport.org/v1.0"`.
+- `spec_version` changed from `"0.1.0"` / `"0.2.0"` to `"1.0.0"`.
+- Merkle tree leaf/node hashing now uses domain separation prefixes.
+
+### New Files
+- `spec/draft-grotowski-aps-v1.md` — Internet-Draft document.
+- `docs/IMPLEMENTATION-GUIDE.md` — Practical implementor guide with migration notes.
+
 ## v0.2.0 — 2026-02-14
 
 - **Section 9: Agent DNA** — Canonical DNA representation (skills, soul, policies → keccak256 hash), frozen DNA, DNA mutation via version bump.

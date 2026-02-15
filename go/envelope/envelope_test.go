@@ -142,7 +142,7 @@ func TestFromJSON_Roundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	e2, err := FromJSON(data)
+	e2, err := FromJSON(data, false)
 	if err != nil {
 		t.Fatal(err)
 	}

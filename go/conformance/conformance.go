@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/agent-passport/standard-go/crypto"
+	"github.com/cezexPL/agent-passport-standard/go/crypto"
 )
 
 // ConformanceReport holds results for all test vectors.

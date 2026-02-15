@@ -212,9 +212,17 @@ class AgentPassport:
     def to_json(self) -> bytes:
         return crypto.canonicalize_json(self.to_dict())
 
+    def validate(self) -> None:
+        """Validate this passport against the JSON schema. Raises ValidationError."""
+        from aps.validate import validate_passport
+        validate_passport(self.to_dict())
+
     @staticmethod
-    def from_json(data: bytes | str) -> "AgentPassport":
+    def from_json(data: bytes | str, validate: bool = True) -> "AgentPassport":
         raw = json.loads(data)
+        if validate:
+            from aps.validate import validate_passport
+            validate_passport(raw)
         p = AgentPassport()
         p.context = raw.get("@context", "")
         p.spec_version = raw.get("spec_version", "")

@@ -4,8 +4,12 @@
     <strong>Open standard for verifiable AI agent identity, provenance, and trust.</strong>
   </p>
   <p align="center">
-    <a href="./spec/SPECIFICATION.md"><img src="https://img.shields.io/badge/spec-v0.2.0-blue?style=flat-square" alt="Spec v0.2.0"></a>
+    <a href="./spec/SPECIFICATION.md"><img src="https://img.shields.io/badge/spec-v1.0.0-blue?style=flat-square" alt="Spec v1.0.0"></a>
     <a href="./go"><img src="https://img.shields.io/badge/Go_SDK-1.22-00ADD8?style=flat-square&logo=go" alt="Go 1.22"></a>
+    <a href="./python"><img src="https://img.shields.io/badge/Python_SDK-3.10+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.10+"></a>
+    <a href="./typescript"><img src="https://img.shields.io/badge/TypeScript_SDK-5.7+-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 5.7+"></a>
+    <a href="https://pypi.org/project/aps-sdk/"><img src="https://img.shields.io/badge/PyPI-aps--sdk-blue?style=flat-square&logo=pypi" alt="PyPI"></a>
+    <a href="https://www.npmjs.com/package/aps-sdk"><img src="https://img.shields.io/badge/npm-aps--sdk-red?style=flat-square&logo=npm" alt="npm"></a>
     <a href="./spec"><img src="https://img.shields.io/badge/schemas-JSON_Schema-green?style=flat-square" alt="JSON Schema"></a>
     <a href="./go/conformance"><img src="https://img.shields.io/badge/conformance-passing-brightgreen?style=flat-square" alt="Conformance"></a>
     <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache_2.0-blue?style=flat-square" alt="License"></a>
@@ -78,6 +82,23 @@ cd go && go build ./cmd/passport-cli
 ./passport-cli envelope validate ../examples/example-envelope.json
 ```
 
+### Install the SDK
+
+**Go:**
+```bash
+go get github.com/cezexPL/agent-passport-standard/go@v1.0.0
+```
+
+**Python:**
+```bash
+pip install aps-sdk
+```
+
+**TypeScript:**
+```bash
+npm install aps-sdk
+```
+
 ### Use the Go SDK
 
 ```go
@@ -86,28 +107,63 @@ import (
     "github.com/cezexPL/agent-passport-standard/go/crypto"
 )
 
-// Create a new agent passport
 pub, priv, _ := crypto.GenerateKeyPair()
-p := passport.New("did:key:z6Mk...", pub)
+p, _ := passport.New(passport.Config{
+    ID:       "did:key:z6MkAgent123",
+    PublicKey: hex.EncodeToString(pub),
+    OwnerDID: "did:key:z6MkOwner456",
+    Skills:   []passport.Skill{{Name: "go-backend", Version: "1.0", Description: "Go dev", Capabilities: []string{"code_write"}, Hash: "0x..."}},
+    Soul:     passport.Soul{Personality: "Focused", WorkStyle: "Systematic", Constraints: []string{}, Hash: "0x..."},
+    Policies: passport.Policies{PolicySetHash: "0x...", Summary: []string{"read-only"}},
+    Lineage:  passport.Lineage{Kind: "original", Parents: []string{}, Generation: 0},
+})
+_ = p.Sign(priv)
+ok, _ := p.Verify(pub) // true
+```
 
-// Set skills and soul
-p.Snapshot.Skills = []passport.Skill{{Name: "go-backend", Version: "1.0"}}
-p.Snapshot.Soul = passport.Soul{Personality: "Focused, reliable"}
+### Use the Python SDK
 
-// Compute DNA hash and sign
-p.Snapshot.Hash = crypto.Keccak256Canonical(p.Snapshot.Skills, p.Snapshot.Soul, p.Snapshot.Policies)
-p.Sign(priv)
+```python
+from aps import AgentPassport, PassportConfig, Skill, Soul, Policies, Lineage
+from aps.crypto import generate_key_pair
 
-// Verify
-valid := p.Verify()
+pub, priv = generate_key_pair()
+p = AgentPassport.new(PassportConfig(
+    id="did:key:z6MkAgent123", public_key=pub_hex, owner_did="did:key:z6MkOwner456",
+    skills=[Skill("code-review", "1.0", "Review", ["code_review"], "0x...")],
+    soul=Soul("Thorough", "Sequential", [], "0x..."),
+    policies=Policies("0x...", ["read-only"]),
+    lineage=Lineage("original", [], 0),
+))
+p.sign(priv)
+assert p.verify(pub)
+```
+
+### Use the TypeScript SDK
+
+```typescript
+import { AgentPassport, generateKeyPair } from 'aps-sdk';
+import { bytesToHex } from '@noble/hashes/utils';
+
+const { publicKey, privateKey } = generateKeyPair();
+const p = await AgentPassport.create({
+  id: 'did:key:z6MkAgent123', publicKey: bytesToHex(publicKey),
+  ownerDID: 'did:key:z6MkOwner456',
+  skills: [{ name: 'ts-backend', version: '1.0', description: 'TS dev', capabilities: ['code_write'], hash: '0x...' }],
+  soul: { personality: 'Focused', work_style: 'Systematic', constraints: [], hash: '0x...', frozen: false },
+  policies: { policy_set_hash: '0x...', summary: ['read-only'] },
+  lineage: { kind: 'original', parents: [], generation: 0 },
+});
+await p.sign(privateKey);
+console.log(await p.verify(publicKey)); // true
 ```
 
 ### Run the conformance suite
 
 ```bash
-cd go
-go test ./...
-go test ./conformance -v
+cd go && go test ./...
+cd python && python3 -m pytest tests/ -v
+cd typescript && npx vitest run
 ```
 
 ---
@@ -149,15 +205,24 @@ agent-passport-standard/
 │   ├── memory-vault.schema.json   # Memory Vault JSON Schema
 │   ├── anchoring.schema.json      # Anchoring receipt schema
 │   └── test-vectors.json          # Conformance test vectors
-├── go/                            # Reference Go SDK
+├── go/                            # Go SDK (github.com/cezexPL/agent-passport-standard/go)
 │   ├── passport/                  # Passport create/verify
 │   ├── receipt/                   # Work Receipt handling
 │   ├── envelope/                  # Security Envelope validation
 │   ├── crypto/                    # Ed25519, keccak-256, Merkle, canonical JSON
-│   ├── anchor/                    # Anchoring provider interface + noop
+│   ├── anchor/                    # Ethereum + Arweave + NoOp providers
 │   ├── compat/                    # Agent Skills format converter
 │   ├── conformance/               # Conformance suite runner
-│   └── cmd/passport-cli/          # CLI validator tool
+│   ├── cmd/passport-cli/          # CLI validator tool
+│   └── API.md                     # Go API documentation
+├── python/                        # Python SDK (aps-sdk on PyPI)
+│   ├── aps/                       # Core package
+│   ├── tests/                     # Test suite + benchmarks
+│   └── API.md                     # Python API documentation
+├── typescript/                    # TypeScript SDK (aps-sdk on npm)
+│   ├── src/                       # Core source
+│   ├── tests/                     # Test suite + benchmarks
+│   └── API.md                     # TypeScript API documentation
 ├── examples/                      # Example artifacts
 │   ├── example-passport.json
 │   ├── example-receipt.json
@@ -235,13 +300,106 @@ cd go && go test ./conformance -v
 
 ---
 
+## Multi-Chain Anchoring
+
+APS supports pluggable anchoring to multiple blockchain networks for tamper-evident timestamping of agent artifacts.
+
+### Supported Providers
+
+| Provider | Description | Config |
+|----------|-------------|--------|
+| **Ethereum** | Any EVM chain (Ethereum, Base, Polygon, Arbitrum, etc.) | RPC URL + contract address + sender address |
+| **Arweave** | Permanent storage network | Gateway URL (default: `https://arweave.net`) |
+| **NoOp** | Testing/development (no real anchoring) | None |
+
+### Usage (Go)
+
+```go
+import "github.com/agent-passport/standard-go/anchor"
+
+// Ethereum (works with any EVM chain)
+eth := anchor.NewEthereumProvider(anchor.EthereumConfig{
+    RPCURL:          "https://mainnet.base.org",
+    ContractAddress: "0x...",
+    FromAddress:     "0x...",
+    ChainID:         "8453",
+})
+receipt, _ := eth.Commit(ctx, hash, anchor.AnchorMetadata{ArtifactType: "passport"})
+
+// Arweave
+ar := anchor.NewArweaveProvider(anchor.ArweaveConfig{
+    GatewayURL: "https://arweave.net",
+})
+receipt, _ := ar.Commit(ctx, hash, anchor.AnchorMetadata{ArtifactType: "receipt"})
+```
+
+All providers implement the same `AnchorProvider` interface (`Commit`, `Verify`, `Info`), making it easy to switch between chains or use multiple chains simultaneously.
+
+---
+
+## Attestation Exchange
+
+APS implements cross-platform attestation exchange based on W3C Verifiable Credentials, enabling agents to present credentials issued by one platform to another.
+
+### Features
+
+- **W3C VC Format** — Attestations follow the Verifiable Credentials data model.
+- **Ed25519 Signatures** — All attestations are signed with Ed25519.
+- **Trust Registry** — In-memory registry of trusted issuers for verification.
+- **Expiry Checking** — Expired attestations are automatically rejected.
+- **Tamper Detection** — Any modification invalidates the signature.
+
+### Usage (Go)
+
+```go
+import "github.com/agent-passport/standard-go/attestation"
+
+// Create a signed attestation
+att, _ := attestation.CreateAttestation(
+    "did:key:z6MkIssuer",
+    "did:key:z6MkSubject",
+    "SkillVerification",
+    map[string]interface{}{"skill": "go-backend", "level": "expert"},
+    issuerPrivateKey,
+)
+
+// Verify
+valid, _ := attestation.VerifyAttestation(att, issuerPublicKey)
+
+// Use a trust registry
+registry := attestation.NewAttestationRegistry()
+registry.RegisterIssuer("did:key:z6MkIssuer", issuerPublicKey)
+valid, _ = registry.VerifyFromRegistry(att)
+```
+
+See [§13 of the specification](./spec/SPECIFICATION.md) for the full attestation exchange protocol.
+
+---
+
+## Performance Benchmarks
+
+Measured on Intel Core i5-3210M (Go benchmarks via `go test -bench`):
+
+| Operation | Go | Python | TypeScript |
+|-----------|----|--------|------------|
+| Keccak-256 (44B) | 3.9 µs | < 100 µs | < 50 µs |
+| Canonicalize JSON | 54.5 µs | < 200 µs | < 50 µs |
+| Ed25519 Sign | 48.9 µs | < 500 µs | ~1.9 ms |
+| Ed25519 Verify | 112.9 µs | < 500 µs | ~4.7 ms |
+| Passport Create | 87.9 µs | < 1 ms | ~102 µs |
+| Passport Sign+Verify | 643.9 µs | < 5 ms | ~5.7 ms |
+| Merkle Tree (1000 leaves) | 3.1 ms | < 100 ms | ~60.5 ms |
+
+Run benchmarks: `cd go && go test -bench=. -benchmem .`
+
+---
+
 ## Roadmap
 
 - [x] **v0.1** — Core: Passport, Work Receipt, Security Envelope, Anchoring
 - [x] **v0.2** — Extended: Agent DNA, Lineage & Heritage, Memory Vault, Collaboration History
-- [x] **v0.3** — SDK: Python SDK, TypeScript/Deno SDK, CI/CD, Cross-SDK Conformance
-- [ ] **v0.4** — Advanced: Cross-platform attestation exchange, multi-chain anchoring
-- [ ] **v1.0** — Stable: RFC submission, formal security audit
+- [x] **v0.3** — SDK: Python SDK, TypeScript SDK, CI/CD, Cross-SDK Conformance
+- [x] **v1.0** — Stable: Multi-chain anchoring, attestation exchange, security audit, RFC-style spec
 
 ---
 

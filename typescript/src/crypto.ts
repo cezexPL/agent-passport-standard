@@ -174,7 +174,7 @@ export class MerkleTree {
       }
       idx = Math.floor(idx / 2);
     }
-    return current === root;
+    return timingSafeEqual(current, root);
   }
 }
 
@@ -194,6 +194,59 @@ function hashPair(a: string, b: string): string {
   combined.set(bBytes, aBytes.length);
 
   return keccak256(combined);
+}
+
+// --- Timing-Safe Comparison ---
+
+/**
+ * Constant-time string comparison to prevent timing attacks.
+ */
+export function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+// --- Input Validation ---
+
+const DID_RE = /^did:key:z6Mk[A-Za-z0-9]+$/;
+const HASH_RE = /^0x[0-9a-fA-F]{64}$/;
+const SIG_RE = /^[0-9a-fA-F]{128}$/;
+
+export function validateDid(s: string): void {
+  if (!s) throw new Error('DID must not be empty');
+  if (!DID_RE.test(s)) throw new Error(`invalid DID format: ${s}`);
+}
+
+export function validateHash(s: string): void {
+  if (!s) throw new Error('hash must not be empty');
+  if (!HASH_RE.test(s)) throw new Error(`invalid hash format: ${s}`);
+}
+
+export function validateSignature(s: string): void {
+  if (!s) throw new Error('signature must not be empty');
+  if (!SIG_RE.test(s)) throw new Error(`invalid signature format: ${s}`);
+}
+
+export function validateTimestamp(s: string): void {
+  if (!s) throw new Error('timestamp must not be empty');
+  const d = new Date(s);
+  if (isNaN(d.getTime())) throw new Error(`invalid timestamp: ${s}`);
+}
+
+export function validateVersion(v: number): void {
+  if (!Number.isInteger(v) || v < 1) throw new Error(`version must be positive integer, got ${v}`);
+}
+
+export function validateTrustTier(t: number): void {
+  if (!Number.isInteger(t) || t < 0 || t > 3) throw new Error(`trust tier must be 0-3, got ${t}`);
+}
+
+export function validateAttestationCount(c: number): void {
+  if (!Number.isInteger(c) || c < 0) throw new Error(`attestation count must be non-negative, got ${c}`);
 }
 
 export function hexToBytes(hex: string): Uint8Array {

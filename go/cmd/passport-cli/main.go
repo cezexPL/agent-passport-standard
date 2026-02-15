@@ -11,10 +11,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/agent-passport/standard-go/crypto"
-	"github.com/agent-passport/standard-go/envelope"
-	"github.com/agent-passport/standard-go/passport"
-	"github.com/agent-passport/standard-go/receipt"
+	"github.com/cezexPL/agent-passport-standard/go/crypto"
+	"github.com/cezexPL/agent-passport-standard/go/envelope"
+	"github.com/cezexPL/agent-passport-standard/go/passport"
+	"github.com/cezexPL/agent-passport-standard/go/receipt"
 )
 
 const (

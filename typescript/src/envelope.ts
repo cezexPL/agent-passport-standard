@@ -1,5 +1,6 @@
 import type { SecurityEnvelopeData, EnvelopeConfig } from './types.js';
 import { canonicalizeJson, ed25519Sign, ed25519Verify, hashExcludingFields } from './crypto.js';
+import { validateEnvelope as validateEnvelopeSchema } from './validate.js';
 
 export class SecurityEnvelope {
   data: SecurityEnvelopeData;
@@ -29,8 +30,14 @@ export class SecurityEnvelope {
     return env;
   }
 
-  static fromJson(json: string): SecurityEnvelope {
-    return new SecurityEnvelope(JSON.parse(json) as SecurityEnvelopeData);
+  validateSchema(): void {
+    validateEnvelopeSchema(this.data);
+  }
+
+  static fromJson(json: string, validate = true): SecurityEnvelope {
+    const data = JSON.parse(json) as SecurityEnvelopeData;
+    if (validate) validateEnvelopeSchema(data);
+    return new SecurityEnvelope(data);
   }
 
   toJson(): string {

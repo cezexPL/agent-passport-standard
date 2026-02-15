@@ -8,7 +8,8 @@ import (
 
 	"crypto/ed25519"
 
-	"github.com/agent-passport/standard-go/crypto"
+	"github.com/cezexPL/agent-passport-standard/go/crypto"
+	"github.com/cezexPL/agent-passport-standard/go/validate"
 )
 
 // SecurityEnvelope declares execution constraints for an agent.
@@ -226,8 +227,26 @@ func (e *SecurityEnvelope) JSON() ([]byte, error) {
 	return crypto.CanonicalizeJSON(e)
 }
 
-// FromJSON parses a SecurityEnvelope from JSON.
-func FromJSON(data []byte) (*SecurityEnvelope, error) {
+// ValidateSchema validates the envelope against the JSON schema.
+func (e *SecurityEnvelope) ValidateSchema() error {
+	data, err := json.Marshal(e)
+	if err != nil {
+		return err
+	}
+	return validate.ValidateEnvelope(data)
+}
+
+// FromJSON parses a SecurityEnvelope from JSON. Set validate to true (default) to run schema validation.
+func FromJSON(data []byte, opts ...bool) (*SecurityEnvelope, error) {
+	doValidate := true
+	if len(opts) > 0 {
+		doValidate = opts[0]
+	}
+	if doValidate {
+		if err := validate.ValidateEnvelope(data); err != nil {
+			return nil, fmt.Errorf("schema validation: %w", err)
+		}
+	}
 	var e SecurityEnvelope
 	if err := json.Unmarshal(data, &e); err != nil {
 		return nil, fmt.Errorf("unmarshal: %w", err)

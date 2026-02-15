@@ -1,5 +1,6 @@
 import type { WorkReceiptData, ReceiptConfig, ReceiptEvent } from './types.js';
 import { canonicalizeJson, ed25519Sign, ed25519Verify, hashExcludingFields } from './crypto.js';
+import { validateReceipt as validateReceiptSchema } from './validate.js';
 
 export class WorkReceipt {
   data: WorkReceiptData;
@@ -29,8 +30,14 @@ export class WorkReceipt {
     return new WorkReceipt(data);
   }
 
-  static fromJson(json: string): WorkReceipt {
-    return new WorkReceipt(JSON.parse(json) as WorkReceiptData);
+  validate(): void {
+    validateReceiptSchema(this.data);
+  }
+
+  static fromJson(json: string, validate = true): WorkReceipt {
+    const data = JSON.parse(json) as WorkReceiptData;
+    if (validate) validateReceiptSchema(data);
+    return new WorkReceipt(data);
   }
 
   toJson(): string {

@@ -141,9 +141,17 @@ class SecurityEnvelope:
     def to_json(self) -> bytes:
         return crypto.canonicalize_json(self.to_dict())
 
+    def validate_schema(self) -> None:
+        """Validate this envelope against the JSON schema. Raises ValidationError."""
+        from aps.validate import validate_envelope
+        validate_envelope(self.to_dict())
+
     @staticmethod
-    def from_json(data: bytes | str) -> "SecurityEnvelope":
+    def from_json(data: bytes | str, validate: bool = True) -> "SecurityEnvelope":
         raw = json.loads(data)
+        if validate:
+            from aps.validate import validate_envelope
+            validate_envelope(raw)
         e = SecurityEnvelope()
         e.context = raw.get("@context", "")
         e.spec_version = raw.get("spec_version", "")
