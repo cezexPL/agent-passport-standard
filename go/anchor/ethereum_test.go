@@ -35,7 +35,7 @@ func TestEthereumCommit(t *testing.T) {
 	provider := NewEthereumProvider(EthereumConfig{
 		RPCURL:          server.URL,
 		ContractAddress: "0x1234567890123456789012345678901234567890",
-		ChainID:         "1",
+		ChainID:         1,
 		FromAddress:     "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 	})
 
@@ -71,7 +71,7 @@ func TestEthereumVerify(t *testing.T) {
 	provider := NewEthereumProvider(EthereumConfig{
 		RPCURL:          server.URL,
 		ContractAddress: "0x1234567890123456789012345678901234567890",
-		ChainID:         "1",
+		ChainID:         1,
 		FromAddress:     "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 	})
 
@@ -99,7 +99,7 @@ func TestEthereumVerifyNotAnchored(t *testing.T) {
 	provider := NewEthereumProvider(EthereumConfig{
 		RPCURL:          server.URL,
 		ContractAddress: "0x1234567890123456789012345678901234567890",
-		ChainID:         "1",
+		ChainID:         1,
 	})
 
 	hash := [32]byte{1, 2, 3}
@@ -113,9 +113,9 @@ func TestEthereumVerifyNotAnchored(t *testing.T) {
 }
 
 func TestEthereumInfo(t *testing.T) {
-	provider := NewEthereumProvider(EthereumConfig{ChainID: "8453"})
+	provider := NewEthereumProvider(EthereumConfig{ChainID: 8453})
 	info := provider.Info()
-	if info.Name != "ethereum" || info.ChainID != "8453" || info.Type != "ethereum" {
+	if info.Name != "ethereum" || info.ChainID != 8453 || info.Type != "ethereum" {
 		t.Errorf("unexpected info: %+v", info)
 	}
 }

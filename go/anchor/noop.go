@@ -35,7 +35,7 @@ func (n *NoOpProvider) Verify(_ context.Context, hash [32]byte) (AnchorVerificat
 func (n *NoOpProvider) Info() ProviderInfo {
 	return ProviderInfo{
 		Name:    "noop",
-		ChainID: "0",
+		ChainID: 0,
 		Type:    "noop",
 	}
 }

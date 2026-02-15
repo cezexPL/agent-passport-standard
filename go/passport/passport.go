@@ -224,6 +224,115 @@ func New(cfg Config) (*AgentPassport, error) {
 	return p, nil
 }
 
+// UpdateSnapshot creates a new snapshot version with updated skills/soul/policies.
+// Enforces: monotonic version increment, prev_hash chain, frozen immutability.
+func (p *AgentPassport) UpdateSnapshot(cfg SnapshotUpdate) error {
+	// Frozen check: if skills are frozen, they cannot be modified
+	if p.Snapshot.Skills.Frozen && cfg.Skills != nil {
+		return fmt.Errorf("cannot update skills: frozen at version %d", p.Snapshot.Version)
+	}
+	if p.Snapshot.Soul.Frozen && cfg.Soul != nil {
+		return fmt.Errorf("cannot update soul: frozen at version %d", p.Snapshot.Version)
+	}
+
+	// Save current hash as prev_hash
+	prevHash := p.Snapshot.Hash
+
+	// Increment version (monotonic)
+	newVersion := p.Snapshot.Version + 1
+
+	// Apply updates
+	if cfg.Skills != nil {
+		p.Snapshot.Skills.Entries = cfg.Skills
+	}
+	if cfg.Soul != nil {
+		p.Snapshot.Soul = *cfg.Soul
+	}
+	if cfg.Policies != nil {
+		p.Snapshot.Policies = *cfg.Policies
+	}
+	if cfg.FreezeSkills {
+		p.Snapshot.Skills.Frozen = true
+	}
+	if cfg.FreezeSoul {
+		p.Snapshot.Soul.Frozen = true
+	}
+
+	// Compute new snapshot hash
+	snapshotContent := map[string]interface{}{
+		"skills":   p.Snapshot.Skills,
+		"soul":     p.Snapshot.Soul,
+		"policies": p.Snapshot.Policies,
+	}
+	hash, err := crypto.SnapshotHash(snapshotContent)
+	if err != nil {
+		return fmt.Errorf("compute snapshot hash: %w", err)
+	}
+
+	p.Snapshot.Version = newVersion
+	p.Snapshot.PrevHash = &prevHash
+	p.Snapshot.Hash = hash
+	p.Snapshot.CreatedAt = time.Now().UTC().Format(time.RFC3339)
+
+	// Invalidate existing proof (passport changed, must re-sign)
+	p.Proof = nil
+
+	return nil
+}
+
+// ValidateSnapshotChain checks that snapshot version and prev_hash form a valid chain.
+// prevSnapshots should be ordered by version (ascending). Current passport snapshot is validated last.
+func ValidateSnapshotChain(current *AgentPassport, prevSnapshots []Snapshot) error {
+	if current.Snapshot.Version < 1 {
+		return fmt.Errorf("snapshot version must be >= 1, got %d", current.Snapshot.Version)
+	}
+
+	expectedVersion := 1
+	var lastHash *string
+
+	for _, snap := range prevSnapshots {
+		if snap.Version != expectedVersion {
+			return fmt.Errorf("expected version %d, got %d", expectedVersion, snap.Version)
+		}
+		if expectedVersion == 1 && snap.PrevHash != nil {
+			return fmt.Errorf("version 1 must have nil prev_hash")
+		}
+		if expectedVersion > 1 {
+			if snap.PrevHash == nil {
+				return fmt.Errorf("version %d must have prev_hash", snap.Version)
+			}
+			if lastHash != nil && *snap.PrevHash != *lastHash {
+				return fmt.Errorf("version %d prev_hash mismatch: expected %s, got %s", snap.Version, *lastHash, *snap.PrevHash)
+			}
+		}
+		h := snap.Hash
+		lastHash = &h
+		expectedVersion++
+	}
+
+	// Validate current snapshot
+	if current.Snapshot.Version != expectedVersion {
+		return fmt.Errorf("current snapshot version mismatch: expected %d, got %d", expectedVersion, current.Snapshot.Version)
+	}
+	if expectedVersion > 1 && current.Snapshot.PrevHash == nil {
+		return fmt.Errorf("current snapshot must have prev_hash for version %d", current.Snapshot.Version)
+	}
+	if lastHash != nil && current.Snapshot.PrevHash != nil && *current.Snapshot.PrevHash != *lastHash {
+		return fmt.Errorf("current snapshot prev_hash mismatch")
+	}
+
+	return nil
+}
+
+// SnapshotUpdate holds fields to update in a snapshot.
+type SnapshotUpdate struct {
+	Skills       []Skill   // nil = no change
+	Soul         *Soul     // nil = no change
+	Policies     *Policies // nil = no change
+	FreezeSkills bool
+	FreezeSoul   bool
+}
+
 // Hash computes the keccak256 hash of the passport excluding the proof field.
 func (p *AgentPassport) Hash() (string, error) {
 	return crypto.HashExcludingFields(p, "proof")

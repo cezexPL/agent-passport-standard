@@ -35,8 +35,8 @@ type AnchorVerification struct {
 // ProviderInfo describes the anchoring provider.
 type ProviderInfo struct {
 	Name    string `json:"name"`
-	ChainID string `json:"chain_id"`
-	Type    string `json:"type"` // "ethereum", "arweave", "transparency-log", "noop"
+	ChainID int    `json:"chain_id"` // EVM chain ID (0 for non-EVM providers) — matches schema integer type
+	Type    string `json:"type"`     // "ethereum", "arweave", "transparency-log", "noop"
 }
 
 // AnchorMetadata provides context for the commit.

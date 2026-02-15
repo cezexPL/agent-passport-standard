@@ -193,7 +193,7 @@ func (a *ArweaveProvider) Verify(ctx context.Context, hash [32]byte) (AnchorVeri
 func (a *ArweaveProvider) Info() ProviderInfo {
 	return ProviderInfo{
 		Name:    "arweave",
-		ChainID: "arweave-mainnet",
+		ChainID: 0, // non-EVM provider
 		Type:    "arweave",
 	}
 }

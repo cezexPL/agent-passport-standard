@@ -17,7 +17,7 @@ type EthereumConfig struct {
 	RPCURL          string
 	PrivateKey      string // hex-encoded (no 0x prefix needed)
 	ContractAddress string // 0x-prefixed
-	ChainID         string // e.g. "1" for mainnet, "8453" for Base
+	ChainID         int    // e.g. 1 for mainnet, 8453 for Base
 	FromAddress     string // 0x-prefixed sender address
 }
 

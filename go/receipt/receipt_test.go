@@ -122,3 +122,75 @@ func TestFromJSON_Roundtrip(t *testing.T) {
 		t.Error("receipt_id mismatch")
 	}
 }
+
+// === Event Chain Tests ===
+
+func TestAddEvent_ValidType(t *testing.T) {
+	r := createTestReceipt(t)
+	err := r.AddEvent(ReceiptEvent{Type: "claim"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Events[0].PayloadHash == "" {
+		t.Fatal("payload_hash should be computed automatically")
+	}
+}
+
+func TestAddEvent_InvalidType(t *testing.T) {
+	r := createTestReceipt(t)
+	err := r.AddEvent(ReceiptEvent{Type: "hack"})
+	if err == nil {
+		t.Fatal("should reject unknown event type")
+	}
+}
+
+func TestAddEvent_ChronologicalOrder(t *testing.T) {
+	r := createTestReceipt(t)
+	r.AddEvent(ReceiptEvent{Type: "claim", Timestamp: "2026-01-01T12:00:00Z"})
+	err := r.AddEvent(ReceiptEvent{Type: "submit", Timestamp: "2026-01-01T11:00:00Z"})
+	if err == nil {
+		t.Fatal("should reject out-of-order timestamp")
+	}
+	// In order should work
+	err = r.AddEvent(ReceiptEvent{Type: "submit", Timestamp: "2026-01-01T13:00:00Z"})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestVerifyEventChain(t *testing.T) {
+	r := createTestReceipt(t)
+	r.AddEvent(ReceiptEvent{Type: "claim", Timestamp: "2026-01-01T10:00:00Z"})
+	r.AddEvent(ReceiptEvent{Type: "submit", Timestamp: "2026-01-01T11:00:00Z"})
+	r.AddEvent(ReceiptEvent{Type: "verify", Timestamp: "2026-01-01T12:00:00Z"})
+
+	err := r.VerifyEventChain()
+	if err != nil {
+		t.Fatalf("valid chain rejected: %v", err)
+	}
+}
+
+func TestVerifyEventChain_MissingHash(t *testing.T) {
+	r := createTestReceipt(t)
+	// Manually add event without hash
+	r.Events = append(r.Events, ReceiptEvent{Type: "claim", Timestamp: "2026-01-01T10:00:00Z"})
+	err := r.VerifyEventChain()
+	if err == nil {
+		t.Fatal("should detect missing payload_hash")
+	}
+}
+
+func createTestReceipt(t *testing.T) *WorkReceipt {
+	t.Helper()
+	r, err := New(Config{
+		ReceiptID: "receipt-test-001",
+		JobID:     "job-test-001",
+		AgentDID:  "did:key:z6MkAgent",
+		ClientDID: "did:key:z6MkClient",
+		AgentSnapshot: AgentSnapshot{Version: 1, Hash: "0x1234"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return r
+}

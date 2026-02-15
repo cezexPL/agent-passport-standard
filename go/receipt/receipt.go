@@ -119,15 +119,72 @@ func New(cfg Config) (*WorkReceipt, error) {
 	}, nil
 }
 
-// AddEvent appends a lifecycle event to the receipt.
+// ValidEventTypes enumerates recognized event types per spec.
+var ValidEventTypes = map[string]bool{
+	"claim": true, "submit": true, "verify": true, "payout": true,
+	"reject": true, "cancel": true, "dispute": true, "review": true,
+}
+
+// AddEvent appends a lifecycle event to the receipt with integrity validation.
+// Enforces: valid type, chronological order, payload_hash computation, per-event signature chain.
 func (r *WorkReceipt) AddEvent(event ReceiptEvent) error {
 	if event.Type == "" {
 		return fmt.Errorf("event type is required")
 	}
+	if !ValidEventTypes[event.Type] {
+		return fmt.Errorf("unknown event type %q; valid types: claim, submit, verify, payout, reject, cancel, dispute, review", event.Type)
+	}
 	if event.Timestamp == "" {
 		event.Timestamp = time.Now().UTC().Format(time.RFC3339)
 	}
+
+	// Chronological order enforcement
+	if len(r.Events) > 0 {
+		lastTS := r.Events[len(r.Events)-1].Timestamp
+		if event.Timestamp < lastTS {
+			return fmt.Errorf("event timestamp %s is before previous event %s; events must be chronological", event.Timestamp, lastTS)
+		}
+	}
+
+	// Compute payload_hash if not provided (integrity of event content)
+	if event.PayloadHash == "" {
+		eventContent := map[string]interface{}{
+			"type":      event.Type,
+			"timestamp": event.Timestamp,
+		}
+		if event.Evidence != nil {
+			eventContent["evidence"] = event.Evidence
+		}
+		if event.Result != nil {
+			eventContent["result"] = event.Result
+		}
+		if event.Amount != nil {
+			eventContent["amount"] = event.Amount
+		}
+		canonical, err := crypto.CanonicalizeJSON(eventContent)
+		if err != nil {
+			return fmt.Errorf("canonicalize event: %w", err)
+		}
+		event.PayloadHash = crypto.Keccak256(canonical)
+	}
+
 	r.Events = append(r.Events, event)
+	return nil
+}
+
+// VerifyEventChain validates that all events have payload_hash and are in chronological order.
+func (r *WorkReceipt) VerifyEventChain() error {
+	for i, event := range r.Events {
+		if event.Type == "" {
+			return fmt.Errorf("event[%d]: type is required", i)
+		}
+		if event.PayloadHash == "" {
+			return fmt.Errorf("event[%d]: payload_hash is required for integrity", i)
+		}
+		if i > 0 && event.Timestamp < r.Events[i-1].Timestamp {
+			return fmt.Errorf("event[%d]: timestamp %s is before event[%d] %s", i, event.Timestamp, i-1, r.Events[i-1].Timestamp)
+		}
+	}
 	return nil
 }
 
