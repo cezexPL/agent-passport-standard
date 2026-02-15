@@ -1,64 +1,13 @@
 {
-  "_comment": "Example Memory Vault recovery flow — Agent Passport Standard v0.2",
-
-  "step_1_vault_state": {
-    "@context": "https://agentpassport.org/v0.2/memory-vault",
-    "type": "MemoryVault",
-    "agent_id": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
-    "vault_hash": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-    "encrypted_at": "2026-02-14T19:00:00Z",
-    "key_hash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-    "items": ["skills", "soul", "memories"],
-    "ciphertexts": {
-      "skills": {
-        "ciphertext_hash": "0xaaaa000000000000000000000000000000000000000000000000000000000001",
-        "algorithm": "AES-256-GCM",
-        "iv": "dGVzdC1pdi1za2lsbHM=",
-        "size_bytes": 2048
-      },
-      "soul": {
-        "ciphertext_hash": "0xbbbb000000000000000000000000000000000000000000000000000000000002",
-        "algorithm": "AES-256-GCM",
-        "iv": "dGVzdC1pdi1zb3Vs",
-        "size_bytes": 1024
-      },
-      "memories": {
-        "ciphertext_hash": "0xcccc000000000000000000000000000000000000000000000000000000000003",
-        "algorithm": "AES-256-GCM",
-        "iv": "dGVzdC1pdi1tZW1z",
-        "size_bytes": 8192
-      }
-    },
-    "anchoring": {
-      "provider": "ethereum-compatible",
-      "tx_hash": "0xdeadbeef...",
-      "block": 12345678
-    }
-  },
-
-  "step_2_recovery_request": {
-    "action": "recover",
-    "agent_id": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
-    "owner_provided_key_hash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-    "_note": "Owner computes keccak256(their_key) and sends only the hash for verification. The actual key is used client-side for decryption."
-  },
-
-  "step_3_verification": {
-    "stored_key_hash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-    "provided_key_hash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-    "match": true,
-    "_note": "Platform verifies keccak256(key) matches stored key_hash. If match, returns encrypted vault data."
-  },
-
-  "step_4_client_side_decryption": {
-    "_note": "Owner decrypts each item locally using AES-256-GCM with their raw key and the per-item IV.",
-    "decrypted_items": ["skills", "soul", "memories"],
-    "vault_hash_verified": true
-  },
-
-  "step_5_selective_disclosure": {
-    "_note": "Owner may choose to reveal only specific fields. Example: disclose skills only.",
-    "disclosed_fields": ["skills"],
-    "verification": "Verifier recomputes ciphertext_hash for disclosed field and checks against vault metadata."
-  }
+  "@context": "https://agentpassport.org/v0.2/recovery",
+  "agent_id": "did:key:z6Mk63bdf99a9cf64993a21c0477c4f6e01d2db48523",
+  "encrypted_at": "2026-02-15T16:12:38Z",
+  "items": [
+    "skills",
+    "soul",
+    "memories"
+  ],
+  "key_hash": "0xfb981c83d89ab740fcc379f8085bcc81a06357b9085eea72da6e43d3b1a026cf",
+  "type": "RecoveryRequest",
+  "vault_hash": "0x6c6ffd6398f4471d2fc8ee48f429c149f1f11e929481f518a0fb81c0e6b87ea0"
 }

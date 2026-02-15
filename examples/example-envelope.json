@@ -2,22 +2,19 @@
   "@context": "https://agentpassport.org/v0.1",
   "spec_version": "0.1.0",
   "type": "SecurityEnvelope",
-  "agent_did": "did:key:z6MkpTHR8VNsBxYAAWHut2Geadd9jSwuBV8xRoAnwWsdvktH",
-  "agent_snapshot_hash": "0x7a3b4c5d6e7f8091a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5",
+  "agent_did": "did:key:z6Mk63bdf99a9cf64993a21c0477c4f6e01d2db48523",
+  "agent_snapshot_hash": "0x8c8e1e0cc880dcf6ac4d68bca7298193a04e916a3568f703cf65770d0d3af748",
   "capabilities": {
     "allowed": [
       "code_read",
       "code_write",
       "test_run",
-      "build",
-      "file_system_read",
-      "file_system_write"
+      "build"
     ],
     "denied": [
       "network_egress",
-      "process_spawn_unrestricted",
-      "host_mount",
-      "privileged_mode"
+      "filesystem_root",
+      "process_spawn"
     ]
   },
   "sandbox": {
@@ -31,13 +28,22 @@
     },
     "network": {
       "policy": "deny-all",
-      "allowed_egress": [],
       "dns_resolution": false
     },
     "filesystem": {
-      "writable_paths": ["/workspace", "/tmp"],
-      "readonly_paths": ["/usr", "/bin", "/lib"],
-      "denied_paths": ["/etc/shadow", "/proc/keys", "/sys"]
+      "writable_paths": [
+        "/workspace",
+        "/tmp"
+      ],
+      "readonly_paths": [
+        "/usr",
+        "/lib"
+      ],
+      "denied_paths": [
+        "/etc/shadow",
+        "/root",
+        "/proc"
+      ]
     }
   },
   "memory": {
@@ -60,15 +66,15 @@
     "tier": 2,
     "attestation_count": 5,
     "highest_attestation": "ReliabilityGold",
-    "benchmark_coverage": 0.8,
+    "benchmark_coverage": 0.85,
     "anomaly_score": 0.02
   },
-  "envelope_hash": "0x9990000000000000000000000000000000000000000000000000000000000001",
+  "envelope_hash": "0xef9c657364f8b993f5879e93a9824460c77b62d5c3d6cb34b2277e7445cbaabf",
   "proof": {
     "type": "Ed25519Signature2020",
-    "created": "2026-02-14T01:00:00Z",
-    "verification_method": "did:key:z6MkpClawBotDenPlatformSigningKey1234567890ab#key-1",
+    "created": "2026-02-15T16:12:38Z",
+    "verification_method": "did:key:z6Mk63bdf99a9cf64993a21c0477c4f6e01d2db48523#key-1",
     "proof_purpose": "assertionMethod",
-    "proof_value": "z3FXQqFwEnvelopeSignatureBase58Encoded1234567890abcdefghij"
+    "proof_value": "9253751c06c0a3ec9bb8bf1ecbe327b83cf24b9e970f6002634a3f97b473e45b7132fe3467f6b59e80a3ff26de15ae5fa3ff699e05e055c26f7a198279166007"
   }
 }

@@ -4,86 +4,56 @@
   "type": "WorkReceipt",
   "receipt_id": "550e8400-e29b-41d4-a716-446655440000",
   "job_id": "550e8400-e29b-41d4-a716-446655440001",
-  "agent_did": "did:key:z6MkpTHR8VNsBxYAAWHut2Geadd9jSwuBV8xRoAnwWsdvktH",
-  "client_did": "did:key:z6MkpOwnerABCDEFGHIJKLMNOPQRSTUVWXYZ12345",
-  "platform_did": "did:key:z6MkpClawBotDenPlatformSigningKey1234567890ab",
+  "agent_did": "did:key:z6Mk63bdf99a9cf64993a21c0477c4f6e01d2db48523",
+  "client_did": "did:key:z6MkClient63bdf99a9cf64993a21c0477c4f6e01d",
   "agent_snapshot": {
-    "version": 12,
-    "hash": "0x7a3b4c5d6e7f8091a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5"
+    "version": 1,
+    "hash": "0x8c8e1e0cc880dcf6ac4d68bca7298193a04e916a3568f703cf65770d0d3af748"
   },
   "events": [
     {
       "type": "claim",
-      "timestamp": "2026-02-14T01:00:00Z",
-      "payload_hash": "0xaaa0000000000000000000000000000000000000000000000000000000000001",
-      "signature": "z3FXQqFwClaimSignatureBase58Encoded1234567890abcdefghijkl"
+      "timestamp": "2026-02-15T15:42:38Z",
+      "payload_hash": "0xfd0fcea875fcce23e98da8bc20833c6103f395865e52e5f2806367593b8fc8a4",
+      "signature": "636c61696d2d7369672d706c616365686f6c646572"
     },
     {
       "type": "submit",
-      "timestamp": "2026-02-14T01:30:00Z",
-      "payload_hash": "0xbbb0000000000000000000000000000000000000000000000000000000000001",
+      "timestamp": "2026-02-15T16:02:38Z",
+      "payload_hash": "0x5891ffda2969e131637d8e68a5e74a3be008b48b9c71a5459fad28f4da7b6807",
+      "signature": "7375626d69742d7369672d706c616365686f6c646572",
       "evidence": {
-        "commit_sha": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
-        "test_results_hash": "0xccc0000000000000000000000000000000000000000000000000000000000001",
-        "build_log_hash": "0xddd0000000000000000000000000000000000000000000000000000000000001",
-        "image_digest": "sha256:eee0000000000000000000000000000000000000000000000000000000000001",
-        "sandbox_policy_hash": "0xfff0000000000000000000000000000000000000000000000000000000000001"
-      },
-      "signature": "z3FXQqFwSubmitSignatureBase58Encoded1234567890abcdefghijkl"
+        "commit_sha": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+        "test_results_hash": "0x67a3fd002a7a45e39949d77a0ef7d252e34f6bb880a499bc11bcce6a190bfca9"
+      }
     },
     {
       "type": "verify",
-      "timestamp": "2026-02-14T01:35:00Z",
-      "payload_hash": "0x1110000000000000000000000000000000000000000000000000000000000001",
+      "timestamp": "2026-02-15T16:07:38Z",
+      "payload_hash": "0x42c13ac9a7a7d75f1bc7b10c163518a8e7626563bdeb9466468ac0292e09a17e",
+      "signature": "7665726966792d7369672d706c616365686f6c646572",
       "result": {
         "status": "accepted",
-        "score": 87,
-        "stages": {
-          "build": "pass",
-          "lint": "pass",
-          "test": "pass",
-          "review": "pass"
-        }
-      },
-      "signature": "z3FXQqFwVerifySignatureBase58Encoded1234567890abcdefghijkl"
+        "score": 92
+      }
     },
     {
       "type": "payout",
-      "timestamp": "2026-02-14T01:40:00Z",
-      "payload_hash": "0x2220000000000000000000000000000000000000000000000000000000000001",
+      "timestamp": "2026-02-15T16:12:38Z",
+      "payload_hash": "0xf98807b29683a92ec7e435fb20bd978901658c77449a0218c282195b25e49e71",
+      "signature": "7061796f75742d7369672d706c616365686f6c646572",
       "amount": {
-        "value": 542,
-        "unit": "points",
-        "distribution": {
-          "agent": 379,
-          "platform": 81,
-          "reviewers": 54,
-          "reserve": 28
-        }
-      },
-      "signature": "z3FXQqFwPayoutSignatureBase58Encoded1234567890abcdefghijkl"
+        "value": 750,
+        "unit": "points"
+      }
     }
   ],
-  "batch_proof": {
-    "batch_root": "0x3330000000000000000000000000000000000000000000000000000000000001",
-    "leaf_index": 7,
-    "proof": [
-      "0x4440000000000000000000000000000000000000000000000000000000000001",
-      "0x5550000000000000000000000000000000000000000000000000000000000001",
-      "0x6660000000000000000000000000000000000000000000000000000000000001"
-    ],
-    "batch_anchoring": {
-      "provider": "base-sepolia",
-      "tx_hash": "0x7770000000000000000000000000000000000000000000000000000000000001",
-      "verified": true
-    }
-  },
-  "receipt_hash": "0x8880000000000000000000000000000000000000000000000000000000000001",
+  "receipt_hash": "0x122d1dcaa23e626e880f1ee396cbce6a73014030b35c190b098d50d8f7a08963",
   "proof": {
     "type": "Ed25519Signature2020",
-    "created": "2026-02-14T01:40:00Z",
-    "verification_method": "did:key:z6MkpClawBotDenPlatformSigningKey1234567890ab#key-1",
+    "created": "2026-02-15T16:12:38Z",
+    "verification_method": "did:key:z6Mk63bdf99a9cf64993a21c0477c4f6e01d2db48523#key-1",
     "proof_purpose": "assertionMethod",
-    "proof_value": "z3FXQqFwReceiptSignatureBase58Encoded1234567890abcdefghijk"
+    "proof_value": "0da7aa51aaa095ef8a4ed334abbe14ee93c1c4ab0282ebee0694bd816e6dce41ea5d4be7d7a8b1d134e82631c8ac5930f83c5b18f52b1c394fd913c62604000b"
   }
 }
