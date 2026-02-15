@@ -1,0 +1,69 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  go-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Test
+        run: cd go && go test ./... -v
+      - name: Conformance
+        run: cd go && go test ./conformance -v
+
+  python-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install
+        run: cd python && pip install pycryptodome cryptography pytest
+      - name: Test
+        run: cd python && python -m pytest tests/ -v
+
+  typescript-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install
+        run: cd typescript && npm install
+      - name: Test
+        run: cd typescript && npx vitest run
+
+  cross-sdk-conformance:
+    needs: [go-sdk, python-sdk, typescript-sdk]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Go conformance
+        run: cd go && go test ./conformance -v -run TestConformance
+      - name: Python conformance
+        run: |
+          cd python
+          pip install pycryptodome cryptography pytest
+          python -m pytest tests/test_conformance.py -v
+      - name: TypeScript conformance
+        run: |
+          cd typescript
+          npm install
+          npx vitest run conformance

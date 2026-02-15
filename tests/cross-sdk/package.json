@@ -1,0 +1,8 @@
+{
+  "name": "cross-sdk-hash-test",
+  "private": true,
+  "dependencies": {
+    "js-sha3": "^0.9.3",
+    "tsx": "^4.7.0"
+  }
+}

@@ -1,25 +1,8 @@
 package conformance
 
 import (
-	"os"
-	"path/filepath"
 	"testing"
 )
-
-func findVectorsPath() string {
-	// Try relative paths from the test location
-	candidates := []string{
-		"../../spec/test-vectors.json",
-		"../../../standard/spec/test-vectors.json",
-	}
-	for _, c := range candidates {
-		abs, _ := filepath.Abs(c)
-		if _, err := os.Stat(abs); err == nil {
-			return abs
-		}
-	}
-	return ""
-}
 
 func TestConformance_RunAll(t *testing.T) {
 	path := findVectorsPath()

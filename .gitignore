@@ -4,6 +4,23 @@ go/vendor/
 *.test
 *.out
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+*.egg
+
+# TypeScript / Node
+node_modules/
+typescript/dist/
+*.js.map
+*.tsbuildinfo
+
 # IDE
 .vscode/
 .idea/
@@ -17,4 +34,3 @@ Thumbs.db
 
 # Build
 bin/
-dist/

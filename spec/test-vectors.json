@@ -1,6 +1,6 @@
 {
   "spec_version": "0.1.0",
-  "generated_at": "2026-02-14T01:00:00Z",
+  "generated_at": "2026-02-15T15:00:00Z",
   "vectors": [
     {
       "name": "canonical-json-sorting",
@@ -20,7 +20,7 @@
       "name": "keccak256-simple-passport",
       "description": "Keccak-256 of a minimal passport identity fragment.",
       "input": {"id": "did:key:z6MkpTHR8VNsBxYAAWHut2Geadd9jSwuBV8xRoAnwWsdvktH", "type": "AgentPassport"},
-      "expected_output": "0x5f2f45b3a01ee867cf1bacf1d5e7589ab3d08a tried7e4d6e9e0cb23b6e3b1a8f42c7d",
+      "expected_output": "0x01023c707105c8d65952118e2268a934a3d6a8ee81bd42cfaa10d4c725cef31d",
       "notes": "Canonical: {\"id\":\"did:key:z6MkpTHR8VNsBxYAAWHut2Geadd9jSwuBV8xRoAnwWsdvktH\",\"type\":\"AgentPassport\"}"
     },
     {
@@ -48,7 +48,7 @@
         ]
       },
       "expected_output": {
-        "root": "0x_IMPLEMENTATION_DEPENDENT_COMPUTE_WITH_SORTED_CONCAT",
+        "root": "0x0c48ddc2b8d6d066c52fc608d4d0254f418bea6cd8424fe95390ac87323f9c9f",
         "tree_depth": 2
       },
       "notes": "Nodes are keccak256(sorted_concat(left, right)). Sorted means min(left,right) || max(left,right)."
@@ -60,9 +60,9 @@
         "leaf": "0x0000000000000000000000000000000000000000000000000000000000000001",
         "proof": [
           "0x0000000000000000000000000000000000000000000000000000000000000002",
-          "0x_HASH_OF_LEAVES_3_AND_4"
+          "0x2e174c10e159ea99b867ce3205125c24a42d128804e4070ed6fcc8cc98166aa0"
         ],
-        "root": "0x_EXPECTED_ROOT"
+        "root": "0x0c48ddc2b8d6d066c52fc608d4d0254f418bea6cd8424fe95390ac87323f9c9f"
       },
       "expected_output": {
         "valid": true
@@ -91,7 +91,7 @@
           "summary": ["can_bid"]
         }
       },
-      "expected_output": "0x_KECCAK256_OF_CANONICAL_INPUT",
+      "expected_output": "0x9a6dc343c4c0750d93d94e6cba3cbea754a72ee62cf74fa0d10e84c8ee772797",
       "notes": "Canonicalize the input object per RFC 8785, then keccak256. Implementations MUST produce identical hashes."
     },
     {
@@ -110,7 +110,7 @@
           {"type": "payout", "timestamp": "2026-02-14T01:40:00Z", "payload_hash": "0x0000000000000000000000000000000000000000000000000000000000000004", "signature": "z_payout_sig", "amount": {"value": 500, "unit": "points"}}
         ]
       },
-      "expected_output": "0x_KECCAK256_OF_CANONICAL_RECEIPT_WITHOUT_PROOF",
+      "expected_output": "0x7d94c67f0a7adaa40afde5441fec924425ec38e3385a37d18817c1898407a781",
       "notes": "Canonicalize the entire receipt object (without proof field), then keccak256."
     },
     {
@@ -134,7 +134,7 @@
         },
         "trust": {"tier": 2, "attestation_count": 5, "highest_attestation": "ReliabilityGold", "benchmark_coverage": 0.8, "anomaly_score": 0.02}
       },
-      "expected_output": "0x_KECCAK256_OF_CANONICAL_ENVELOPE_WITHOUT_PROOF",
+      "expected_output": "0x0a44b312b2c6ace579a4fa07b6751a148da81c9ee3f9184706a41250c7ac97d0",
       "notes": "Canonicalize input (without @context, spec_version, type, envelope_hash, proof), then keccak256."
     },
     {
