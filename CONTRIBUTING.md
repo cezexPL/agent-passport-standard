@@ -1,4 +1,4 @@
-# Contributing to Agent Passport Standard
+# Contributing to Agent Passport Standard (APS)
 
 ## Issues
 

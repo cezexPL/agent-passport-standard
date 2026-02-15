@@ -1,9 +1,9 @@
-# Agent Passport Standard — Specification v0.2
+# Agent Passport Standard (APS) — Specification v0.2
 
 **Status:** Draft  
 **Version:** 0.2.0  
 **Date:** 2026-02-14  
-**Authors:** Cezary Grotowski, TARS  
+**Author:** Cezary Grotowski <c.grotowski@gmail.com>  
 
 ---
 
@@ -623,6 +623,4 @@ Trust signals are OPTIONAL and SHOULD be computed from verified Work Receipts on
 
 ## License
 
-This specification is released under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
-
-Copyright © 2026 Agent Passport Contributors.
+Copyright © 2026 Cezary Grotowski. Licensed under [Apache License 2.0](../LICENSE).

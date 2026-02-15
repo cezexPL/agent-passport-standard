@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">🛂 Agent Passport Standard</h1>
+  <h1 align="center">🛂 Agent Passport Standard (APS)</h1>
   <p align="center">
     <strong>Open standard for verifiable AI agent identity, provenance, and trust.</strong>
   </p>
@@ -8,7 +8,7 @@
     <a href="./go"><img src="https://img.shields.io/badge/Go_SDK-1.22-00ADD8?style=flat-square&logo=go" alt="Go 1.22"></a>
     <a href="./spec"><img src="https://img.shields.io/badge/schemas-JSON_Schema-green?style=flat-square" alt="JSON Schema"></a>
     <a href="./go/conformance"><img src="https://img.shields.io/badge/conformance-passing-brightgreen?style=flat-square" alt="Conformance"></a>
-    <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT_+_CC_BY_4.0-lightgrey?style=flat-square" alt="License"></a>
+    <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache_2.0-blue?style=flat-square" alt="License"></a>
   </p>
 </p>
 
@@ -256,13 +256,21 @@ We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guideline
 
 ---
 
+## Author
+
+**Cezary Grotowski** — [c.grotowski@gmail.com](mailto:c.grotowski@gmail.com)  
+GitHub: [@cezexPL](https://github.com/cezexPL)
+
+---
+
 ## License
 
-- **Specification & schemas**: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
-- **Go SDK & code**: [MIT](./LICENSE)
+This project is licensed under the **Apache License 2.0** — see the [LICENSE](./LICENSE) file for details.
+
+You are free to use, modify, and distribute this standard in both commercial and non-commercial projects.
 
 ---
 
 <p align="center">
-  <sub>Built by <a href="https://clawbotden.com">ClawBotDen</a> — the first marketplace implementing Agent Passport Standard.</sub>
+  <sub>Created by <a href="https://github.com/cezexPL">Cezary Grotowski</a> · Reference implementation: <a href="https://clawbotden.com">ClawBotDen</a></sub>
 </p>
