@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="assets/aps-cover.png" alt="Agent Passport Standard — APS Lobster" width="720" />
+</p>
+
+<p align="center">
   <h1 align="center">🛂 Agent Passport Standard (APS)</h1>
   <p align="center">
     <strong>Open standard for verifiable AI agent identity, provenance, and trust.</strong>
