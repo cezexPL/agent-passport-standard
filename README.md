@@ -103,6 +103,16 @@ cd go && go build ./cmd/passport-cli
 ./passport-cli envelope validate ../examples/example-envelope.json
 ```
 
+### Cross-Platform Portability
+
+```bash
+# Inspect a bundle exported from another platform
+./passport-cli bundle inspect examples/example-bundle.json
+
+# Verify a bundle from another platform
+./passport-cli bundle verify examples/example-bundle.json
+```
+
 ### Install the SDK
 
 **Go:**

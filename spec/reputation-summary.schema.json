@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schemas/reputation-summary.schema.json",
+  "title": "Reputation Summary",
+  "description": "Portable reputation summary for an AI agent, aggregating performance metrics over a time period.",
+  "type": "object",
+  "required": ["@context", "type", "agent_id", "platform", "period", "metrics", "proof"],
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "const": "https://agentpassport.org/v0.2/reputation"
+    },
+    "type": {
+      "const": "ReputationSummary"
+    },
+    "agent_id": {
+      "$ref": "#/$defs/DID",
+      "description": "DID of the agent this reputation summary describes."
+    },
+    "platform": {
+      "type": "string",
+      "pattern": "^did:web:.+$",
+      "description": "DID of the platform issuing this reputation summary."
+    },
+    "period": {
+      "type": "object",
+      "required": ["from", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "to": {
+          "$ref": "#/$defs/Timestamp"
+        }
+      },
+      "description": "Time period covered by this summary."
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["jobs_completed", "jobs_verified", "avg_quality_score", "avg_timeliness_score", "trust_tier"],
+      "additionalProperties": false,
+      "properties": {
+        "jobs_completed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of jobs completed in the period."
+        },
+        "jobs_verified": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of jobs with verified work receipts."
+        },
+        "avg_quality_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Average quality score across completed jobs (0.0–1.0)."
+        },
+        "avg_timeliness_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Average timeliness score across completed jobs (0.0–1.0)."
+        },
+        "trust_tier": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "Computed trust tier (0 = untrusted, 3 = fully trusted)."
+        },
+        "benchmark_scores": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Map of benchmark suite name to score. OPTIONAL."
+        }
+      }
+    },
+    "anchoring": {
+      "$ref": "#/$defs/Anchoring",
+      "description": "Optional on-chain anchoring proof for this reputation summary."
+    },
+    "proof": {
+      "$ref": "#/$defs/Proof"
+    }
+  },
+  "$defs": {
+    "Hex256": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{64}$",
+      "description": "Keccak-256 hash as 0x-prefixed lowercase hex (66 chars)."
+    },
+    "DID": {
+      "type": "string",
+      "pattern": "^did:(key:z6Mk[A-Za-z0-9]+|web:.+)$",
+      "description": "Decentralized Identifier (did:key or did:web)."
+    },
+    "Timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp."
+    },
+    "Proof": {
+      "type": "object",
+      "required": ["type", "created", "verification_method", "proof_purpose", "proof_value"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "Ed25519Signature2020" },
+        "created": { "$ref": "#/$defs/Timestamp" },
+        "verification_method": { "type": "string" },
+        "proof_purpose": { "const": "assertionMethod" },
+        "proof_value": { "type": "string" }
+      }
+    },
+    "Anchoring": {
+      "type": "object",
+      "required": ["provider", "contract", "tx_hash", "block", "verified"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": { "type": "string" },
+        "contract": { "type": "string", "pattern": "^0x[0-9a-fA-F]{40}$" },
+        "tx_hash": { "type": "string" },
+        "block": { "type": "integer", "minimum": 0 },
+        "verified": { "type": "boolean" }
+      }
+    }
+  }
+}

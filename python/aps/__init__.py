@@ -25,6 +25,9 @@ from .receipt import WorkReceipt, ReceiptConfig
 from .envelope import SecurityEnvelope, EnvelopeConfig
 from .anchor import AnchorProvider, NoopAnchor, AnchorReceipt, AnchorVerification, AnchorMetadata
 from .compat import import_agent_skill, export_agent_skill, load_agents_md
+from .bundle import AgentPassportBundle
+from .did import DIDDocument, resolve_did_key, resolve_did_web, resolve, extract_public_key
+from .reputation import ReputationSummary
 
 __all__ = [
     "canonicalize_json", "keccak256", "keccak256_bytes", "snapshot_hash",
@@ -35,4 +38,7 @@ __all__ = [
     "SecurityEnvelope", "EnvelopeConfig",
     "AnchorProvider", "NoopAnchor", "AnchorReceipt", "AnchorVerification", "AnchorMetadata",
     "import_agent_skill", "export_agent_skill", "load_agents_md",
+    "AgentPassportBundle",
+    "DIDDocument", "resolve_did_key", "resolve_did_web", "resolve", "extract_public_key",
+    "ReputationSummary",
 ]

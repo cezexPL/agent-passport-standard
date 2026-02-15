@@ -936,6 +936,82 @@ are critical vulnerabilities in open, multi-organization agent ecosystems.
 
 ---
 
+## 16. Federation Protocol
+
+### 16.1 Overview
+
+The Federation Protocol enables platforms implementing APS to discover each other, exchange trust registries, and verify agent credentials issued by remote platforms. Federation transforms APS from a single-platform standard into a cross-organizational trust framework.
+
+### 16.2 Discovery
+
+Platforms MUST publish a Federation Discovery document at:
+
+```
+GET /.well-known/agent-passport-standard
+```
+
+The response MUST be a JSON object conforming to `federation-discovery.schema.json`.
+
+### 16.3 Passport Bundle
+
+For cross-platform agent transfer, the exporting platform MUST produce an AgentPassportBundle conforming to `bundle.schema.json`. The bundle is a self-contained, signed package including:
+
+- The agent's current passport (signed)
+- Recent work receipts (signed, OPTIONAL)
+- Attestations from trusted issuers (W3C VC, OPTIONAL)
+- A portable reputation summary (signed, OPTIONAL)
+- On-chain anchoring proofs (OPTIONAL)
+- A bundle-level Ed25519 signature over all contents
+
+### 16.4 Import Flow
+
+When Platform B receives a bundle from Platform A:
+
+1. **Parse** — Validate bundle JSON against schema.
+2. **Resolve Issuer** — Use DID resolution (§16.6) to fetch Platform A's public key.
+3. **Verify Bundle Signature** — Verify the Ed25519 proof over the bundle.
+4. **Verify Passport** — Verify the passport's own Ed25519 signature.
+5. **Verify Receipts** — Verify each work receipt signature (OPTIONAL).
+6. **Verify Attestations** — Verify each attestation signature + check revocation (OPTIONAL).
+7. **Check Anchoring** — Verify on-chain anchoring proofs if present (OPTIONAL for Level 1).
+8. **Trust Decision** — Accept, partially accept, or reject based on local trust policy.
+
+### 16.5 Reputation Summary
+
+Platforms SHOULD generate signed Reputation Summaries conforming to `reputation-summary.schema.json`. Summaries aggregate metrics from verified work receipts.
+
+### 16.6 DID Resolution
+
+Platforms MUST support at minimum:
+- `did:key` — Direct public key extraction from the DID string.
+- `did:web` — HTTPS fetch of DID Document from the domain.
+
+#### did:web Resolution
+
+Transform rules:
+- `did:web:example.com` → `GET https://example.com/.well-known/did.json`
+- `did:web:example.com:bots:agent1` → `GET https://example.com/bots/agent1/did.json`
+
+The DID Document MUST contain at least one `Ed25519VerificationKey2020` in `verificationMethod`.
+
+### 16.7 Trust Registry Federation
+
+Platforms MAY synchronize trust registries:
+1. Platform A publishes its trust registry at the endpoint declared in discovery.
+2. Platform B fetches and merges trusted issuers.
+3. Merge is additive — Platform B decides which issuers to trust.
+4. Revocation lists SHOULD be checked for each imported issuer.
+
+### 16.8 Security Considerations
+
+- Bundle signatures prevent tampering during transit.
+- DID resolution MUST use HTTPS with certificate validation.
+- Platforms SHOULD rate-limit import requests.
+- Imported agents SHOULD start at Trust Tier 0 regardless of claimed tier (earn trust locally).
+- Platforms MUST NOT auto-elevate trust based solely on remote attestations.
+
+---
+
 ## References
 
 - [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) — Key words for use in RFCs

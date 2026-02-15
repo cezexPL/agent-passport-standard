@@ -1,0 +1,156 @@
+{
+  "@context": "https://agentpassport.org/v0.1",
+  "spec_version": "0.2.0",
+  "type": "AgentPassportBundle",
+  "bundle_id": "bundle:550e8400-e29b-41d4-a716-446655440099",
+  "exported_at": "2026-02-16T00:00:00Z",
+  "platform": "did:web:clawbotden.com",
+  "passport": {
+    "@context": "https://agentpassport.org/v0.1",
+    "spec_version": "0.1.0",
+    "type": "AgentPassport",
+    "id": "did:key:z6MkkMQwqqzaGVosmwTZcA6yGjHYfS6gkd3t4Nrdhgfas3p8",
+    "keys": {
+      "signing": {
+        "algorithm": "Ed25519",
+        "public_key": "57a6b37304758812d87e90dbefff639977f9317eb77b9dd6b29955590e289755"
+      },
+      "encryption": null
+    },
+    "genesis_owner": {
+      "id": "did:key:z6MkjQnKttibrXQg5updPqzANyKG5r1mnRS5DGuaUA7WGiVU",
+      "bound_at": "2026-02-15T16:16:14Z",
+      "immutable": true
+    },
+    "current_owner": {
+      "id": "did:key:z6MkjQnKttibrXQg5updPqzANyKG5r1mnRS5DGuaUA7WGiVU",
+      "transferred_at": null
+    },
+    "snapshot": {
+      "version": 1,
+      "hash": "0x8a23e0a390d9aa47dadc7ea1cd558b1516be3c5e3c170b6b3c4f0da4ba54e08a",
+      "prev_hash": null,
+      "created_at": "2026-02-15T16:16:14Z",
+      "skills": {
+        "entries": [
+          {
+            "name": "go-backend",
+            "version": "1.0.0",
+            "description": "Production-grade Go backend development",
+            "capabilities": ["code_write", "code_review", "test_run"],
+            "hash": "0x34705bed5ed8eee15efe2a9c64f6b696b720d0b831c10f526385fff773713a45"
+          }
+        ],
+        "frozen": false
+      },
+      "soul": {
+        "personality": "Methodical, security-focused",
+        "work_style": "Test-first development",
+        "constraints": ["Never execute arbitrary code without sandbox"],
+        "hash": "0xc5f6cf615ebd3fa7a6c03a21187b90c8e3575cb1adb6a3c0e6bd8560c48b3fc6",
+        "frozen": false
+      },
+      "policies": {
+        "policy_set_hash": "0xdd79140b5e12f71fb6ef877bca9999028db6113428a17d7b2c6ebb8a166595c3",
+        "summary": ["Only execute code in sandboxed environments"]
+      }
+    },
+    "lineage": {
+      "kind": "single",
+      "parents": [],
+      "generation": 0
+    },
+    "proof": {
+      "type": "Ed25519Signature2020",
+      "created": "2026-02-15T16:16:14Z",
+      "verification_method": "did:key:z6MkkMQwqqzaGVosmwTZcA6yGjHYfS6gkd3t4Nrdhgfas3p8#key-1",
+      "proof_purpose": "assertionMethod",
+      "proof_value": "57beedfd8cd2ef07583bbabe91f9dface1e611c9f280259bf87a1d4c877a958674bdd016adb25cf39ac1a09a247e1a4c261d679084b4383f265b128f23d8db0a"
+    }
+  },
+  "receipts": [
+    {
+      "@context": "https://agentpassport.org/v0.1",
+      "spec_version": "0.1.0",
+      "type": "WorkReceipt",
+      "receipt_id": "550e8400-e29b-41d4-a716-446655440000",
+      "job_id": "550e8400-e29b-41d4-a716-446655440001",
+      "agent_did": "did:key:z6MkkMQwqqzaGVosmwTZcA6yGjHYfS6gkd3t4Nrdhgfas3p8",
+      "client_did": "did:key:z6Mkk1eYqhX5edeYGSXQiX6JeDtT7RDzJyCMwY3EdW5SFGSn",
+      "agent_snapshot": {
+        "version": 1,
+        "hash": "0x8a23e0a390d9aa47dadc7ea1cd558b1516be3c5e3c170b6b3c4f0da4ba54e08a"
+      },
+      "events": [
+        {
+          "type": "claim",
+          "timestamp": "2026-02-15T15:46:14Z",
+          "payload_hash": "0xfd0fcea875fcce23e98da8bc20833c6103f395865e52e5f2806367593b8fc8a4",
+          "signature": "636c61696d2d7369672d706c616365686f6c646572"
+        },
+        {
+          "type": "submit",
+          "timestamp": "2026-02-15T16:00:00Z",
+          "payload_hash": "0xaa11bb22cc33dd44ee55ff6677889900aabbccdd",
+          "signature": "7375626d69742d7369672d706c616365686f6c646572"
+        }
+      ],
+      "receipt_hash": "0xplaceholder_receipt_hash",
+      "proof": {
+        "type": "Ed25519Signature2020",
+        "created": "2026-02-15T16:00:00Z",
+        "verification_method": "did:key:z6MkkMQwqqzaGVosmwTZcA6yGjHYfS6gkd3t4Nrdhgfas3p8#key-1",
+        "proof_purpose": "assertionMethod",
+        "proof_value": "aabbccdd00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccdd"
+      }
+    }
+  ],
+  "attestations": [
+    {
+      "@context": ["https://www.w3.org/2018/credentials/v1"],
+      "type": ["VerifiableCredential", "SkillAttestation"],
+      "issuer": "did:web:clawbotden.com",
+      "issuanceDate": "2026-02-15T12:00:00Z",
+      "expirationDate": "2027-02-15T12:00:00Z",
+      "credentialSubject": {
+        "id": "did:key:z6MkkMQwqqzaGVosmwTZcA6yGjHYfS6gkd3t4Nrdhgfas3p8",
+        "skill": "go-backend",
+        "level": "expert",
+        "verified_tasks": 42
+      },
+      "proof": {
+        "type": "Ed25519Signature2020",
+        "created": "2026-02-15T12:00:00Z",
+        "verification_method": "did:web:clawbotden.com#key-1",
+        "proof_purpose": "assertionMethod",
+        "proof_value": "aabbccdd00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabb0011"
+      }
+    }
+  ],
+  "reputation_summary": {
+    "agent_did": "did:key:z6MkkMQwqqzaGVosmwTZcA6yGjHYfS6gkd3t4Nrdhgfas3p8",
+    "platform": "did:web:clawbotden.com",
+    "generated_at": "2026-02-16T00:00:00Z",
+    "total_jobs": 42,
+    "success_rate": 0.95,
+    "average_rating": 4.8,
+    "total_earnings_usd": 12500.00,
+    "top_skills": ["go-backend", "security-audit"],
+    "trust_tier": 2,
+    "proof": {
+      "type": "Ed25519Signature2020",
+      "created": "2026-02-16T00:00:00Z",
+      "verification_method": "did:web:clawbotden.com#key-1",
+      "proof_purpose": "assertionMethod",
+      "proof_value": "aabbccdd00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabb0022"
+    }
+  },
+  "anchoring_proofs": [],
+  "proof": {
+    "type": "Ed25519Signature2020",
+    "created": "2026-02-16T00:00:00Z",
+    "verification_method": "did:web:clawbotden.com#key-1",
+    "proof_purpose": "assertionMethod",
+    "proof_value": "aabbccdd00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabb0033"
+  }
+}

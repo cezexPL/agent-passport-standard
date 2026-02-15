@@ -18,9 +18,10 @@ import (
 )
 
 const (
-	commandVerify  = "verify"
-	commandReceipt = "receipt"
+	commandVerify   = "verify"
+	commandReceipt  = "receipt"
 	commandEnvelope = "envelope"
+	commandBundle   = "bundle"
 )
 
 type verificationResult struct {
@@ -44,6 +45,8 @@ func main() {
 		code = runReceiptCommand(os.Args[2:])
 	case commandEnvelope:
 		code = runEnvelopeCommand(os.Args[2:])
+	case commandBundle:
+		code = runBundleCommand(os.Args[2:])
 	case "-h", "--help":
 		printUsage()
 		return
@@ -566,10 +569,213 @@ func emitResult(result verificationResult, jsonOutput bool) {
 	}
 }
 
+// --- Bundle types and commands ---
+
+type agentPassportBundle struct {
+	Context    string                   `json:"@context"`
+	Type       string                   `json:"type"`
+	Version    string                   `json:"spec_version"`
+	BundleID   string                   `json:"bundle_id"`
+	ExportedAt string                   `json:"exported_at"`
+	Platform   string                   `json:"platform"`
+	Passport   json.RawMessage          `json:"passport"`
+	Receipts   []json.RawMessage        `json:"receipts,omitempty"`
+	Attestations []json.RawMessage      `json:"attestations,omitempty"`
+	Reputation   *json.RawMessage       `json:"reputation_summary,omitempty"`
+	Anchoring    []json.RawMessage      `json:"anchoring_proofs,omitempty"`
+	Proof      *passport.Proof          `json:"proof,omitempty"`
+}
+
+func runBundleCommand(args []string) int {
+	if len(args) < 1 {
+		fmt.Fprintln(os.Stderr, "usage: passport-cli bundle <verify|inspect> <bundle.json>")
+		return 2
+	}
+	switch args[0] {
+	case "verify":
+		return runBundleVerify(args[1:])
+	case "inspect":
+		return runBundleInspect(args[1:])
+	default:
+		fmt.Fprintln(os.Stderr, "usage: passport-cli bundle <verify|inspect> <bundle.json>")
+		return 2
+	}
+}
+
+func runBundleVerify(args []string) int {
+	fs := flag.NewFlagSet("bundle verify", flag.ContinueOnError)
+	publicKey := fs.String("public-key", "", "override verification key")
+	jsonOutput := fs.Bool("json", false, "emit result as JSON")
+	_ = fs.Parse(args)
+	if fs.NArg() != 1 {
+		fmt.Fprintln(os.Stderr, "usage: passport-cli bundle verify [--public-key value] [--json] <bundle.json>")
+		return 2
+	}
+
+	result := verificationResult{Artifact: "bundle", Path: fs.Arg(0), Checks: map[string]string{}}
+	result.Valid = true
+
+	data, err := os.ReadFile(fs.Arg(0))
+	if err != nil {
+		result.Valid = false
+		result.Checks["file"] = err.Error()
+		emitResult(result, *jsonOutput)
+		return 1
+	}
+
+	var bundle agentPassportBundle
+	if err := json.Unmarshal(data, &bundle); err != nil {
+		result.Valid = false
+		result.Checks["json"] = err.Error()
+		emitResult(result, *jsonOutput)
+		return 1
+	}
+	result.Checks["json"] = "ok"
+
+	if bundle.Type != "AgentPassportBundle" {
+		result.Valid = false
+		result.Checks["schema"] = "type must be AgentPassportBundle"
+	} else if bundle.BundleID == "" {
+		result.Valid = false
+		result.Checks["schema"] = "bundle_id is required"
+	} else {
+		result.Checks["schema"] = "ok"
+	}
+
+	// Verify bundle-level signature
+	if bundle.Proof == nil {
+		result.Valid = false
+		result.Checks["bundle_signature"] = "missing proof"
+	} else {
+		pk, pkErr := resolvePublicKey("", *publicKey, bundle.Proof.VerificationMethod)
+		if pkErr != nil {
+			result.Valid = false
+			result.Checks["bundle_signature"] = "key resolution: " + pkErr.Error()
+		} else {
+			sigHex, sigErr := normalizeSignatureValue(bundle.Proof.ProofValue)
+			if sigErr != nil {
+				result.Valid = false
+				result.Checks["bundle_signature"] = "signature: " + sigErr.Error()
+			} else {
+				bundleCopy := bundle
+				bundleCopy.Proof = nil
+				canonical, _ := crypto.CanonicalizeJSON(bundleCopy)
+				ok, verifyErr := crypto.Ed25519Verify(pk, canonical, sigHex)
+				if verifyErr != nil {
+					result.Valid = false
+					result.Checks["bundle_signature"] = "verify error: " + verifyErr.Error()
+				} else {
+					result.Checks["bundle_signature"] = fmt.Sprintf("%t", ok)
+					if !ok {
+						result.Valid = false
+					}
+				}
+			}
+		}
+	}
+
+	// Verify embedded passport signature
+	var p passport.AgentPassport
+	if err := json.Unmarshal(bundle.Passport, &p); err != nil {
+		result.Valid = false
+		result.Checks["passport_signature"] = "parse error: " + err.Error()
+	} else if p.Proof == nil {
+		result.Valid = false
+		result.Checks["passport_signature"] = "missing proof"
+	} else {
+		pk, pkErr := resolvePublicKey(p.Keys.Signing.PublicKey, "", p.Proof.VerificationMethod)
+		if pkErr != nil {
+			result.Valid = false
+			result.Checks["passport_signature"] = "key resolution: " + pkErr.Error()
+		} else {
+			sigHex, sigErr := normalizeSignatureValue(p.Proof.ProofValue)
+			if sigErr != nil {
+				result.Valid = false
+				result.Checks["passport_signature"] = "signature: " + sigErr.Error()
+			} else {
+				pCopy := p
+				pCopy.Proof = nil
+				canonical, _ := crypto.CanonicalizeJSON(pCopy)
+				ok, verifyErr := crypto.Ed25519Verify(pk, canonical, sigHex)
+				if verifyErr != nil {
+					result.Valid = false
+					result.Checks["passport_signature"] = "verify error: " + verifyErr.Error()
+				} else {
+					result.Checks["passport_signature"] = fmt.Sprintf("%t", ok)
+					if !ok {
+						result.Valid = false
+					}
+				}
+			}
+		}
+	}
+
+	emitResult(result, *jsonOutput)
+	if result.Valid {
+		return 0
+	}
+	return 1
+}
+
+func runBundleInspect(args []string) int {
+	if len(args) != 1 {
+		fmt.Fprintln(os.Stderr, "usage: passport-cli bundle inspect <bundle.json>")
+		return 2
+	}
+
+	data, err := os.ReadFile(args[0])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		return 1
+	}
+
+	var bundle agentPassportBundle
+	if err := json.Unmarshal(data, &bundle); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		return 1
+	}
+
+	// Extract agent DID from passport
+	var p passport.AgentPassport
+	agentDID := "(unknown)"
+	if err := json.Unmarshal(bundle.Passport, &p); err == nil {
+		agentDID = p.ID
+	}
+
+	fmt.Printf("Bundle: %s\n", bundle.BundleID)
+	fmt.Printf("  Agent DID:      %s\n", agentDID)
+	fmt.Printf("  Platform:       %s\n", bundle.Platform)
+	fmt.Printf("  Exported At:    %s\n", bundle.ExportedAt)
+	fmt.Printf("  Receipts:       %d\n", len(bundle.Receipts))
+	fmt.Printf("  Attestations:   %d\n", len(bundle.Attestations))
+
+	if bundle.Reputation != nil {
+		fmt.Printf("  Reputation:     present\n")
+	} else {
+		fmt.Printf("  Reputation:     none\n")
+	}
+
+	if len(bundle.Anchoring) > 0 {
+		fmt.Printf("  Anchoring:      %d proof(s)\n", len(bundle.Anchoring))
+	} else {
+		fmt.Printf("  Anchoring:      none\n")
+	}
+
+	hasSig := "no"
+	if bundle.Proof != nil {
+		hasSig = "yes"
+	}
+	fmt.Printf("  Signed:         %s\n", hasSig)
+
+	return 0
+}
+
 func printUsage() {
 	fmt.Println("passport-cli verify <passport.json>")
 	fmt.Println("passport-cli receipt verify <receipt.json>")
 	fmt.Println("passport-cli envelope validate <envelope.json>")
+	fmt.Println("passport-cli bundle verify <bundle.json>")
+	fmt.Println("passport-cli bundle inspect <bundle.json>")
 }
 
 func decodeBase58(input string) ([]byte, error) {

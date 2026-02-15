@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schemas/bundle.schema.json",
+  "title": "Agent Passport Bundle",
+  "description": "Portable bundle containing an agent passport with optional work receipts, attestations, reputation summary, and anchoring proofs.",
+  "type": "object",
+  "required": ["@context", "type", "version", "exported_at", "exported_from", "passport", "proof"],
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "const": "https://agentpassport.org/v0.2/bundle"
+    },
+    "type": {
+      "const": "AgentPassportBundle"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Bundle format version (semver)."
+    },
+    "exported_at": {
+      "$ref": "#/$defs/Timestamp"
+    },
+    "exported_from": {
+      "$ref": "#/$defs/DID",
+      "description": "DID of the platform or entity that exported this bundle."
+    },
+    "passport": {
+      "$ref": "agent-passport.schema.json",
+      "description": "The agent passport document."
+    },
+    "work_receipts": {
+      "type": "array",
+      "items": {
+        "$ref": "work-receipt.schema.json"
+      },
+      "description": "Array of work receipts associated with this agent. OPTIONAL."
+    },
+    "attestations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Attestation"
+      },
+      "description": "Array of third-party attestations. OPTIONAL."
+    },
+    "reputation_summary": {
+      "$ref": "reputation-summary.schema.json",
+      "description": "Portable reputation summary. OPTIONAL."
+    },
+    "anchoring_proofs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/AnchoringProof"
+      },
+      "description": "Array of on-chain anchoring proofs. OPTIONAL."
+    },
+    "proof": {
+      "$ref": "#/$defs/Proof"
+    }
+  },
+  "$defs": {
+    "Hex256": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{64}$",
+      "description": "Keccak-256 hash as 0x-prefixed lowercase hex (66 chars)."
+    },
+    "DID": {
+      "type": "string",
+      "pattern": "^did:(key:z6Mk[A-Za-z0-9]+|web:.+)$",
+      "description": "Decentralized Identifier (did:key or did:web)."
+    },
+    "Timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp."
+    },
+    "Proof": {
+      "type": "object",
+      "required": ["type", "created", "verification_method", "proof_purpose", "proof_value"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "Ed25519Signature2020"
+        },
+        "created": {
+          "$ref": "#/$defs/Timestamp"
+        },
+        "verification_method": {
+          "type": "string",
+          "description": "DID URL referencing the signing key."
+        },
+        "proof_purpose": {
+          "const": "assertionMethod"
+        },
+        "proof_value": {
+          "type": "string",
+          "description": "Multibase-encoded Ed25519 signature."
+        }
+      }
+    },
+    "Attestation": {
+      "type": "object",
+      "required": ["type", "issuer", "credential_hash", "issued_at"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string" },
+        "issuer": { "$ref": "#/$defs/DID" },
+        "credential_hash": { "$ref": "#/$defs/Hex256" },
+        "issued_at": { "$ref": "#/$defs/Timestamp" },
+        "expires_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/Timestamp" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "AnchoringProof": {
+      "type": "object",
+      "required": ["provider", "contract", "tx_hash", "block", "document_hash"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": { "type": "string" },
+        "contract": {
+          "type": "string",
+          "pattern": "^0x[0-9a-fA-F]{40}$"
+        },
+        "tx_hash": { "type": "string" },
+        "block": { "type": "integer", "minimum": 0 },
+        "document_hash": { "$ref": "#/$defs/Hex256" },
+        "anchored_at": { "$ref": "#/$defs/Timestamp" }
+      }
+    }
+  }
+}

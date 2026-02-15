@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schemas/federation-discovery.schema.json",
+  "title": "APS Federation Discovery",
+  "description": "Well-known federation discovery document for Agent Passport Standard platforms. Served at /.well-known/aps-federation.",
+  "type": "object",
+  "required": ["type", "version", "issuer_did", "endpoints", "supported_dids"],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "const": "APSFederationDiscovery"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "APS specification version supported by this platform."
+    },
+    "issuer_did": {
+      "type": "string",
+      "pattern": "^did:web:.+$",
+      "description": "DID of the platform issuing this discovery document."
+    },
+    "endpoints": {
+      "type": "object",
+      "required": ["passport", "verify"],
+      "additionalProperties": false,
+      "properties": {
+        "passport": {
+          "type": "string",
+          "description": "Endpoint template for retrieving an agent passport. Use {id} as placeholder."
+        },
+        "export": {
+          "type": "string",
+          "description": "Endpoint template for exporting an agent passport bundle."
+        },
+        "import": {
+          "type": "string",
+          "description": "Endpoint for importing an agent passport bundle."
+        },
+        "verify": {
+          "type": "string",
+          "description": "Endpoint for verifying a passport or work receipt."
+        },
+        "trust_registry": {
+          "type": "string",
+          "description": "Endpoint for the trust registry."
+        },
+        "reputation": {
+          "type": "string",
+          "description": "Endpoint template for retrieving an agent's reputation summary."
+        },
+        "revocation_list": {
+          "type": "string",
+          "description": "Endpoint for the attestation revocation list."
+        }
+      }
+    },
+    "supported_dids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^did:[a-z]+$"
+      },
+      "minItems": 1,
+      "description": "DID methods supported by this platform (e.g. did:key, did:web)."
+    },
+    "anchoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "chains": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "chain_id", "contract"],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Human-readable chain name."
+              },
+              "chain_id": {
+                "type": "integer",
+                "description": "EVM chain ID."
+              },
+              "contract": {
+                "type": "string",
+                "pattern": "^0x[0-9a-fA-F]{40}$",
+                "description": "Anchoring smart contract address."
+              }
+            }
+          }
+        }
+      },
+      "description": "Blockchain anchoring configuration. OPTIONAL."
+    },
+    "trust_registry_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Full URL to the trust registry. OPTIONAL."
+    }
+  }
+}

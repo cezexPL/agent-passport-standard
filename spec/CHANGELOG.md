@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.3.0 — 2026-02-16
+
+### New Schemas
+- **`bundle.schema.json`** — AgentPassportBundle schema for portable export/import of agent passports with associated work receipts, attestations, reputation summaries, and anchoring proofs. Context: `https://agentpassport.org/v0.2/bundle`.
+- **`reputation-summary.schema.json`** — Portable Reputation Summary schema aggregating per-agent performance metrics (jobs completed/verified, quality/timeliness scores, trust tier, benchmark scores) over a time period. Context: `https://agentpassport.org/v0.2/reputation`.
+- **`federation-discovery.schema.json`** — Well-Known Federation Discovery document (`/.well-known/aps-federation`) enabling platforms to advertise APS endpoints, supported DID methods, and blockchain anchoring configuration. Type: `APSFederationDiscovery`.
+
+### Notes
+- All new schemas use JSON Schema 2020-12 with consistent `$id` URLs under `agentpassport.org/schemas/`.
+- Common `$defs` (Hex256, DID, Timestamp, Proof) are replicated for standalone validation; DID pattern extended to support both `did:key` and `did:web`.
+- Bundle schema references `agent-passport.schema.json`, `work-receipt.schema.json`, and `reputation-summary.schema.json` via `$ref`.
+
 ## v1.0.1 — 2026-02-15
 
 ### Trust Levels & Blockchain Anchoring Requirement
