@@ -239,7 +239,7 @@ cd go && go test ./conformance -v
 
 - [x] **v0.1** — Core: Passport, Work Receipt, Security Envelope, Anchoring
 - [x] **v0.2** — Extended: Agent DNA, Lineage & Heritage, Memory Vault, Collaboration History
-- [ ] **v0.3** — SDK: Python SDK, TypeScript/Deno SDK
+- [x] **v0.3** — SDK: Python SDK, TypeScript/Deno SDK, CI/CD, Cross-SDK Conformance
 - [ ] **v0.4** — Advanced: Cross-platform attestation exchange, multi-chain anchoring
 - [ ] **v1.0** — Stable: RFC submission, formal security audit
 
