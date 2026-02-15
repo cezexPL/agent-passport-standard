@@ -145,7 +145,7 @@ func New(cfg Config) (*SecurityEnvelope, error) {
 
 // Hash computes envelope_hash = keccak256(canonicalize(envelope - proof)).
 func (e *SecurityEnvelope) Hash() (string, error) {
-	return crypto.HashExcludingFields(e, "proof")
+	return crypto.HashExcludingFields(e, "proof", "envelope_hash")
 }
 
 // Validate checks required fields and trust tier rules.

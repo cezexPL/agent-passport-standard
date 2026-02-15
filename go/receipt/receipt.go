@@ -133,7 +133,7 @@ func (r *WorkReceipt) AddEvent(event ReceiptEvent) error {
 
 // Hash computes receipt_hash = keccak256(canonicalize(receipt - proof)).
 func (r *WorkReceipt) Hash() (string, error) {
-	return crypto.HashExcludingFields(r, "proof")
+	return crypto.HashExcludingFields(r, "proof", "receipt_hash")
 }
 
 // Sign signs the receipt with the given Ed25519 private key.

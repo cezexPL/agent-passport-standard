@@ -45,7 +45,7 @@ export class SecurityEnvelope {
   }
 
   hash(): string {
-    return hashExcludingFields(this.data, 'proof');
+    return hashExcludingFields(this.data, 'proof', 'envelope_hash');
   }
 
   validate(): void {

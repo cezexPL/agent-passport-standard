@@ -2,8 +2,8 @@
   "@context": "https://agentpassport.org/v0.1",
   "spec_version": "0.1.0",
   "type": "SecurityEnvelope",
-  "agent_did": "did:key:z6Mk63bdf99a9cf64993a21c0477c4f6e01d2db48523",
-  "agent_snapshot_hash": "0x8c8e1e0cc880dcf6ac4d68bca7298193a04e916a3568f703cf65770d0d3af748",
+  "agent_did": "did:key:z6MkkMQwqqzaGVosmwTZcA6yGjHYfS6gkd3t4Nrdhgfas3p8",
+  "agent_snapshot_hash": "0x8a23e0a390d9aa47dadc7ea1cd558b1516be3c5e3c170b6b3c4f0da4ba54e08a",
   "capabilities": {
     "allowed": [
       "code_read",
@@ -69,12 +69,12 @@
     "benchmark_coverage": 0.85,
     "anomaly_score": 0.02
   },
-  "envelope_hash": "0xef9c657364f8b993f5879e93a9824460c77b62d5c3d6cb34b2277e7445cbaabf",
+  "envelope_hash": "0x15548dac1716533b69a0f278cbb5fcc396b4995ed308012ac15b36ba77b16844",
   "proof": {
     "type": "Ed25519Signature2020",
-    "created": "2026-02-15T16:12:38Z",
-    "verification_method": "did:key:z6Mk63bdf99a9cf64993a21c0477c4f6e01d2db48523#key-1",
+    "created": "2026-02-15T16:16:14Z",
+    "verification_method": "did:key:z6MkkMQwqqzaGVosmwTZcA6yGjHYfS6gkd3t4Nrdhgfas3p8#key-1",
     "proof_purpose": "assertionMethod",
-    "proof_value": "9253751c06c0a3ec9bb8bf1ecbe327b83cf24b9e970f6002634a3f97b473e45b7132fe3467f6b59e80a3ff26de15ae5fa3ff699e05e055c26f7a198279166007"
+    "proof_value": "ddb5a4cc34fa8c93ecb96119c63760cb23f5c512f3690df8a032024f3b7619073f88073c453ea05e690be1b7131bd9a2fc90009fefe5822515c4b0ecf7df5b06"
   }
 }

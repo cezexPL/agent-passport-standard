@@ -71,7 +71,7 @@ class SecurityEnvelope:
         return e
 
     def hash(self) -> str:
-        return crypto.hash_excluding_fields(self.to_dict(), "proof")
+        return crypto.hash_excluding_fields(self.to_dict(), "proof", "envelope_hash")
 
     def validate(self) -> None:
         if not self.agent_did:

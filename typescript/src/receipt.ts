@@ -53,7 +53,7 @@ export class WorkReceipt {
   }
 
   hash(): string {
-    return hashExcludingFields(this.data, 'proof');
+    return hashExcludingFields(this.data, 'proof', 'receipt_hash');
   }
 
   async sign(privateKey: Uint8Array): Promise<void> {

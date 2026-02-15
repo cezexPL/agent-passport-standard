@@ -86,7 +86,7 @@ class WorkReceipt:
         self.events.append(event)
 
     def hash(self) -> str:
-        return crypto.hash_excluding_fields(self.to_dict(), "proof")
+        return crypto.hash_excluding_fields(self.to_dict(), "proof", "receipt_hash")
 
     def sign(self, private_key: Ed25519PrivateKey) -> None:
         self.receipt_hash = self.hash()
