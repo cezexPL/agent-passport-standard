@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Passport Standard (APS) — Open Standard for Verifiable AI Agent Identity</title>
+  <meta name="description" content="The Agent Passport Standard (APS) is an open, vendor-neutral standard for verifiable AI agent identity, provenance, and trust. Like TCP/IP for AI agents.">
+  <meta name="keywords" content="agent passport standard, AI agent identity, verifiable AI, agent trust, Ed25519, blockchain anchoring, AI standard, open source, APS">
+  <meta name="author" content="Cezary Grotowski">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="Agent Passport Standard (APS)">
+  <meta property="og:description" content="Open standard for verifiable AI agent identity, provenance, and trust.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/img/hero-passport.png">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Agent Passport Standard (APS)">
+  <meta name="twitter:description" content="Open standard for verifiable AI agent identity. Like TCP/IP for AI agents.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #0a0b14;
+      --bg-card: #12141f;
+      --bg-card-hover: #1a1d2e;
+      --text: #e2e4ed;
+      --text-muted: #8b8fa4;
+      --accent: #6c5ce7;
+      --accent-light: #a29bfe;
+      --accent-glow: rgba(108, 92, 231, 0.3);
+      --blue: #0984e3;
+      --green: #00b894;
+      --gold: #fdcb6e;
+      --red: #d63031;
+      --border: rgba(255,255,255,0.06);
+      --radius: 12px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    code, pre {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    a { color: var(--accent-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+      background: rgba(10,11,20,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+    }
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    nav .logo {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    nav .logo span { color: var(--accent-light); }
+    nav .links { display: flex; gap: 28px; }
+    nav .links a { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+    nav .links a:hover { color: var(--text); text-decoration: none; }
+    .btn-nav {
+      background: var(--accent);
+      color: #fff;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .btn-nav:hover { background: var(--accent-light); text-decoration: none; }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 160px 0 100px;
+      text-align: center;
+      position: relative;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(108,92,231,0.15);
+      border: 1px solid rgba(108,92,231,0.3);
+      color: var(--accent-light);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, var(--accent-light), var(--blue), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 640px;
+      margin: 0 auto 40px;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary:hover { background: var(--accent-light); transform: translateY(-2px); text-decoration: none; }
+    .btn-outline {
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-outline:hover { border-color: var(--accent); background: rgba(108,92,231,0.1); text-decoration: none; }
+
+    .hero-image {
+      margin-top: 60px;
+      display: flex;
+      justify-content: center;
+    }
+    .hero-image img {
+      max-width: 500px;
+      width: 100%;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    /* ── SECTIONS ── */
+    .section {
+      padding: 100px 0;
+    }
+    .section-alt {
+      background: rgba(255,255,255,0.02);
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    .section-header h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .section-header p {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ── FEATURE GRID ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      transition: all 0.3s;
+    }
+    .feature-card:hover {
+      border-color: var(--accent);
+      background: var(--bg-card-hover);
+      transform: translateY(-4px);
+    }
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 16px;
+    }
+    .feature-card h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* ── TRUST LEVELS ── */
+    .trust-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .trust-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px 28px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .trust-card.level-1 { border-top: 3px solid var(--blue); }
+    .trust-card.level-2 { border-top: 3px solid var(--green); }
+    .trust-card.level-3 { border-top: 3px solid var(--gold); }
+    .trust-card .level-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .level-1 .level-badge { background: rgba(9,132,227,0.15); color: var(--blue); }
+    .level-2 .level-badge { background: rgba(0,184,148,0.15); color: var(--green); }
+    .level-3 .level-badge { background: rgba(253,203,110,0.15); color: var(--gold); }
+    .trust-card h3 { font-size: 1.3rem; margin-bottom: 12px; }
+    .trust-card p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px; }
+    .trust-features { text-align: left; }
+    .trust-features li {
+      list-style: none;
+      padding: 6px 0;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .trust-features li::before { content: '✓ '; color: var(--green); font-weight: bold; }
+    .trust-features li.no::before { content: '✗ '; color: var(--red); }
+
+    /* ── SDK SECTION ── */
+    .sdk-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .sdk-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+    .sdk-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sdk-card pre {
+      background: rgba(0,0,0,0.3);
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--accent-light);
+    }
+
+    /* ── ARCHITECTURE ── */
+    .arch-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+    .arch-image img {
+      width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    }
+    .arch-text h3 {
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+    }
+    .arch-text p {
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .arch-text ul {
+      list-style: none;
+      padding: 0;
+    }
+    .arch-text ul li {
+      padding: 8px 0;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .arch-text ul li strong { color: var(--text); }
+
+    /* ── STATS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      text-align: center;
+    }
+    .stat-item h3 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent-light), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stat-item p { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
+
+    /* ── WHITEPAPER ── */
+    .whitepaper-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+    .wp-content h3 { font-size: 1.5rem; margin-bottom: 16px; }
+    .wp-content p { color: var(--text-muted); margin-bottom: 20px; }
+    .wp-list { list-style: none; padding: 0; }
+    .wp-list li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-muted);
+    }
+    .wp-list li .num {
+      background: var(--accent);
+      color: #fff;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .wp-image img {
+      width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    }
+
+    /* ── CTA ── */
+    .cta {
+      text-align: center;
+      padding: 100px 0;
+      position: relative;
+    }
+    .cta::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta h2 { font-size: 2.5rem; margin-bottom: 16px; }
+    .cta p { color: var(--text-muted); font-size: 1.15rem; margin-bottom: 40px; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    footer a { color: var(--accent-light); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.2rem; }
+      .feature-grid, .trust-grid, .sdk-grid, .stats-grid { grid-template-columns: 1fr; }
+      .arch-container, .whitepaper-section { grid-template-columns: 1fr; }
+      nav .links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="container">
+      <div class="logo">🛂 <span>APS</span> v1.0</div>
+      <div class="links">
+        <a href="#features">Features</a>
+        <a href="#trust-levels">Trust Levels</a>
+        <a href="#sdks">SDKs</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#whitepaper">White Paper</a>
+      </div>
+      <a href="https://github.com/cezexPL/agent-passport-standard" class="btn-nav">⭐ GitHub</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">🔓 Open Standard · Apache 2.0 · v1.0</div>
+      <h1>The Identity Layer<br>for <span class="gradient">AI Agents</span></h1>
+      <p>Agent Passport Standard (APS) is an open, vendor-neutral standard for verifiable AI agent identity, provenance, and trust. Like TCP/IP — but for autonomous agents.</p>
+      <div class="hero-buttons">
+        <a href="https://github.com/cezexPL/agent-passport-standard" class="btn-primary">📦 Get the SDK</a>
+        <a href="https://github.com/cezexPL/agent-passport-standard/blob/main/spec/SPECIFICATION.md" class="btn-outline">📖 Read the Spec</a>
+        <a href="https://github.com/cezexPL/agent-passport-standard/blob/main/spec/draft-grotowski-aps-v1.md" class="btn-outline">📄 RFC Draft</a>
+      </div>
+      <div class="hero-image">
+        <img src="assets/img/hero-passport.png" alt="Agent Passport Standard — holographic digital passport for AI agents">
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item"><h3>3</h3><p>SDKs (Go · Python · TypeScript)</p></div>
+        <div class="stat-item"><h3>309+</h3><p>Tests across all SDKs</p></div>
+        <div class="stat-item"><h3>21</h3><p>RFC Spec Sections</p></div>
+        <div class="stat-item"><h3>7</h3><p>JSON Schemas</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <h2>Why APS?</h2>
+        <p>Every AI agent needs a verifiable identity. APS provides the building blocks.</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🛂</div>
+          <h3>Agent Passport</h3>
+          <p>Cryptographically signed identity document. Skills, soul, policies, lineage — all in one verifiable JSON artifact.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📋</div>
+          <h3>Work Receipt</h3>
+          <p>Immutable proof of work performed. Full lifecycle tracking from claim to payout with hash-chained events.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Security Envelope</h3>
+          <p>Formal sandbox contract. Defines what an agent CAN and CANNOT do — capabilities, resource limits, memory boundaries.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⛓️</div>
+          <h3>Blockchain Anchoring</h3>
+          <p>Anchor any artifact on-chain for immutable proof-of-existence. EVM L2 + Arweave providers included.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🧬</div>
+          <h3>Agent DNA & Heritage</h3>
+          <p>Track agent lineage across generations. Heritage scoring, founding cohorts, trait survival — evolution on record.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🤝</div>
+          <h3>Attestation Exchange</h3>
+          <p>Cross-platform trust via W3C Verifiable Credentials. Trust registry, revocation lists, interoperable attestations.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST LEVELS -->
+  <section class="section section-alt" id="trust-levels">
+    <div class="container">
+      <div class="section-header">
+        <h2>Three Trust Levels</h2>
+        <p>Choose the security level your use case requires. More trust = more blockchain.</p>
+      </div>
+      <div class="trust-grid">
+        <div class="trust-card level-1">
+          <span class="level-badge">Level 1</span>
+          <h3>APS Basic</h3>
+          <p>Format + signatures. No blockchain required.</p>
+          <ul class="trust-features">
+            <li>Standardized JSON format</li>
+            <li>Ed25519 digital signatures</li>
+            <li>Keccak-256 hash chains</li>
+            <li>Local verification</li>
+            <li class="no">No verifiable timestamps</li>
+            <li class="no">No tamper detection</li>
+          </ul>
+        </div>
+        <div class="trust-card level-2">
+          <span class="level-badge">Level 2</span>
+          <h3>APS Anchored</h3>
+          <p>Immutability + verifiable timestamps.</p>
+          <ul class="trust-features">
+            <li>Everything in Basic</li>
+            <li>Blockchain proof-of-existence</li>
+            <li>Verifiable timestamps (block #)</li>
+            <li>Tamper detection</li>
+            <li>Batch Merkle anchoring</li>
+            <li class="no">No heritage/attestation</li>
+          </ul>
+        </div>
+        <div class="trust-card level-3">
+          <span class="level-badge">Level 3</span>
+          <h3>APS Full</h3>
+          <p>Complete security. On-chain identity.</p>
+          <ul class="trust-features">
+            <li>Everything in Anchored</li>
+            <li>Heritage & lineage DAG</li>
+            <li>Attestation exchange</li>
+            <li>On-chain governance</li>
+            <li>Agent Identity Registry</li>
+            <li>Memory vault integrity</li>
+          </ul>
+        </div>
+      </div>
+      <div class="hero-image" style="margin-top:48px">
+        <img src="assets/img/trust-levels.png" alt="Three trust levels of APS" style="max-width:600px">
+      </div>
+    </div>
+  </section>
+
+  <!-- SDKs -->
+  <section class="section" id="sdks">
+    <div class="container">
+      <div class="section-header">
+        <h2>Production-Ready SDKs</h2>
+        <p>Three SDKs, identical behavior. Cross-SDK conformance guaranteed.</p>
+      </div>
+      <div class="sdk-grid">
+        <div class="sdk-card">
+          <h3>🔵 Go</h3>
+          <pre>go get github.com/cezexPL/
+  agent-passport-standard/go
+
+// Create & sign a passport
+p, _ := passport.New(cfg)
+p.Sign(privateKey)
+ok, _ := p.Verify(publicKey)</pre>
+        </div>
+        <div class="sdk-card">
+          <h3>🐍 Python</h3>
+          <pre>pip install aps-sdk
+
+# Create & sign a passport
+p = Passport.create(config)
+p.sign(private_key)
+assert p.verify(public_key)</pre>
+        </div>
+        <div class="sdk-card">
+          <h3>📘 TypeScript</h3>
+          <pre>npm install aps-sdk
+
+// Create & sign a passport
+const p = Passport.create(config)
+p.sign(privateKey)
+console.log(p.verify(publicKey))</pre>
+        </div>
+      </div>
+      <div class="hero-image" style="margin-top:48px">
+        <img src="assets/img/sdks.png" alt="Go, Python, TypeScript SDKs" style="max-width:500px">
+      </div>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section class="section section-alt" id="architecture">
+    <div class="container">
+      <div class="arch-container">
+        <div class="arch-text">
+          <h3>Cryptographic Foundation</h3>
+          <p>Every APS artifact is built on battle-tested cryptographic primitives:</p>
+          <ul>
+            <li><strong>Ed25519</strong> — Digital signatures (RFC 8032). Fast, small keys, deterministic.</li>
+            <li><strong>Keccak-256</strong> — Hashing (FIPS 202). EVM-compatible, collision-resistant.</li>
+            <li><strong>RFC 8785</strong> — JSON Canonicalization. Deterministic serialization across languages.</li>
+            <li><strong>Merkle Trees</strong> — Batch proof. Anchor 1000 hashes for the cost of 1 transaction.</li>
+            <li><strong>did:key</strong> — Decentralized Identifiers. Self-sovereign, no registry needed.</li>
+          </ul>
+        </div>
+        <div class="arch-image">
+          <img src="assets/img/blockchain-anchor.png" alt="Blockchain anchoring architecture">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHITEPAPER -->
+  <section class="section" id="whitepaper">
+    <div class="container">
+      <div class="section-header">
+        <h2>White Paper & Specification</h2>
+        <p>Rigorous technical documentation for implementors and researchers.</p>
+      </div>
+      <div class="whitepaper-section">
+        <div class="wp-image">
+          <img src="assets/img/whitepaper.png" alt="APS Specification and RFC document">
+        </div>
+        <div class="wp-content">
+          <h3>RFC Internet-Draft</h3>
+          <p>A 54KB formal specification following IETF conventions, with security considerations, IANA media type registrations, and implementation guidance.</p>
+          <ul class="wp-list">
+            <li><span class="num">1</span> Full specification (21 sections, ~200 pages equivalent)</li>
+            <li><span class="num">2</span> 7 JSON Schemas (Passport, Receipt, Envelope, DNA, Anchoring, Attestation, Recovery)</li>
+            <li><span class="num">3</span> Security audit report (10 attack vectors, 200+ tests)</li>
+            <li><span class="num">4</span> Implementation guide with migration paths</li>
+            <li><span class="num">5</span> 3 IANA media types (application/agent-passport+json, etc.)</li>
+            <li><span class="num">6</span> Test vectors for cross-SDK conformance</li>
+          </ul>
+          <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap">
+            <a href="https://github.com/cezexPL/agent-passport-standard/blob/main/spec/draft-grotowski-aps-v1.md" class="btn-primary" style="font-size:0.9rem; padding:10px 20px">📄 Read the RFC</a>
+            <a href="https://github.com/cezexPL/agent-passport-standard/blob/main/spec/SPECIFICATION.md" class="btn-outline" style="font-size:0.9rem; padding:10px 20px">📖 Full Spec</a>
+            <a href="https://github.com/cezexPL/agent-passport-standard/blob/main/docs/SECURITY-AUDIT.md" class="btn-outline" style="font-size:0.9rem; padding:10px 20px">🔒 Security Audit</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ECOSYSTEM -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-header">
+        <h2>Open Ecosystem</h2>
+        <p>APS is designed to be the universal identity layer for AI agents everywhere.</p>
+      </div>
+      <div class="feature-grid" style="grid-template-columns: repeat(2, 1fr);">
+        <div class="feature-card">
+          <div class="feature-icon">🌍</div>
+          <h3>Vendor Neutral</h3>
+          <p>Apache 2.0 licensed. No vendor lock-in, no proprietary extensions. Works with any AI provider — OpenAI, Anthropic, Google, open-source models, or custom agents.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔌</div>
+          <h3>Pluggable Architecture</h3>
+          <p>Anchoring providers are interfaces — bring your own chain. Ethereum, Base, Polygon, Arweave, or any future blockchain. Storage and verification are decoupled.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📐</div>
+          <h3>Standards-Based</h3>
+          <p>Built on Ed25519 (RFC 8032), JSON Canonicalization (RFC 8785), DID (W3C), Verifiable Credentials (W3C), and Keccak-256 (NIST). No custom cryptography.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <h3>Agent-First Design</h3>
+          <p>Designed for autonomous agents, not humans with agents. Skills, soul, memory boundaries, heritage tracking — concepts that matter in multi-agent ecosystems.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="container">
+      <h2>Build the Future of Agent Identity</h2>
+      <p>Join the community shaping how AI agents prove who they are, what they've done, and why they can be trusted.</p>
+      <div class="hero-buttons">
+        <a href="https://github.com/cezexPL/agent-passport-standard" class="btn-primary">⭐ Star on GitHub</a>
+        <a href="https://github.com/cezexPL/agent-passport-standard/blob/main/CONTRIBUTING.md" class="btn-outline">🤝 Contribute</a>
+        <a href="https://github.com/cezexPL/agent-passport-standard/discussions" class="btn-outline">💬 Discussions</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <p>Agent Passport Standard (APS) v1.0 · Created by <a href="https://github.com/cezexPL">Cezary Grotowski</a> · <a href="https://github.com/cezexPL/agent-passport-standard/blob/main/LICENSE">Apache License 2.0</a></p>
+      <p style="margin-top:8px; font-size:0.8rem;">Like TCP/IP gave the internet a common language, APS gives AI agents a common identity.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
