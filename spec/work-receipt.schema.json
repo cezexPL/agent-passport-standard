@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schemas/work-receipt.schema.json",
+  "title": "Work Receipt",
+  "description": "Agent Passport Standard v0.1 — cryptographically verifiable record of agent work.",
+  "type": "object",
+  "required": ["@context", "spec_version", "type", "receipt_id", "job_id", "agent_did", "client_did", "agent_snapshot", "events", "receipt_hash", "proof"],
+  "additionalProperties": false,
+  "properties": {
+    "@context": { "const": "https://agentpassport.org/v0.1" },
+    "spec_version": { "type": "string", "pattern": "^0\\.1\\.\\d+$" },
+    "type": { "const": "WorkReceipt" },
+    "receipt_id": { "type": "string", "format": "uuid" },
+    "job_id": { "type": "string", "format": "uuid" },
+    "agent_did": { "$ref": "#/$defs/DID" },
+    "client_did": { "$ref": "#/$defs/DID" },
+    "platform_did": { "$ref": "#/$defs/DID" },
+    "agent_snapshot": {
+      "type": "object",
+      "required": ["version", "hash"],
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "hash": { "$ref": "#/$defs/Hex256" }
+      }
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/Event" }
+    },
+    "batch_proof": { "$ref": "#/$defs/BatchProof" },
+    "receipt_hash": { "$ref": "#/$defs/Hex256" },
+    "proof": { "$ref": "#/$defs/Proof" }
+  },
+  "$defs": {
+    "Hex256": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{64}$"
+    },
+    "DID": {
+      "type": "string",
+      "pattern": "^did:key:z6Mk[A-Za-z0-9]+$"
+    },
+    "Timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "Event": {
+      "type": "object",
+      "required": ["type", "timestamp", "payload_hash", "signature"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["claim", "submit", "verify", "payout"]
+        },
+        "timestamp": { "$ref": "#/$defs/Timestamp" },
+        "payload_hash": { "$ref": "#/$defs/Hex256" },
+        "signature": { "type": "string" },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Key-value evidence map (commit_sha, test_results_hash, etc.)."
+        },
+        "result": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["accepted", "rejected", "needs_revision"] },
+            "score": { "type": "number", "minimum": 0, "maximum": 100 },
+            "stages": {
+              "type": "object",
+              "additionalProperties": { "type": "string", "enum": ["pass", "fail", "skip"] }
+            }
+          },
+          "required": ["status"]
+        },
+        "amount": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "properties": {
+            "value": { "type": "number" },
+            "unit": { "type": "string", "enum": ["points", "usd", "clw"] },
+            "distribution": {
+              "type": "object",
+              "additionalProperties": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "BatchProof": {
+      "type": "object",
+      "required": ["batch_root", "leaf_index", "proof"],
+      "additionalProperties": false,
+      "properties": {
+        "batch_root": { "$ref": "#/$defs/Hex256" },
+        "leaf_index": { "type": "integer", "minimum": 0 },
+        "proof": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Hex256" }
+        },
+        "batch_anchoring": {
+          "type": "object",
+          "properties": {
+            "provider": { "type": "string" },
+            "tx_hash": { "type": "string" },
+            "verified": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "Proof": {
+      "type": "object",
+      "required": ["type", "created", "verification_method", "proof_purpose", "proof_value"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "Ed25519Signature2020" },
+        "created": { "$ref": "#/$defs/Timestamp" },
+        "verification_method": { "type": "string" },
+        "proof_purpose": { "const": "assertionMethod" },
+        "proof_value": { "type": "string" }
+      }
+    }
+  }
+}

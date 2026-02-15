@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schemas/anchoring.schema.json",
+  "title": "Anchoring",
+  "description": "Agent Passport Standard v0.1 — anchoring receipt, verification, and provider schemas.",
+  "$defs": {
+    "AnchorReceipt": {
+      "type": "object",
+      "required": ["tx_hash", "block", "timestamp", "provider"],
+      "additionalProperties": false,
+      "properties": {
+        "tx_hash": {
+          "type": "string",
+          "description": "Transaction hash on the anchoring layer."
+        },
+        "block": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Block number (0 for non-blockchain providers)."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 UTC timestamp of anchoring."
+        },
+        "provider": {
+          "type": "string",
+          "description": "Provider identifier (e.g. 'base-sepolia', 'arweave-mainnet')."
+        }
+      }
+    },
+    "AnchorVerification": {
+      "type": "object",
+      "required": ["exists", "tx_hash", "block", "timestamp"],
+      "additionalProperties": false,
+      "properties": {
+        "exists": {
+          "type": "boolean",
+          "description": "Whether the hash was found on the anchoring layer."
+        },
+        "tx_hash": {
+          "type": "string"
+        },
+        "block": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "ProviderInfo": {
+      "type": "object",
+      "required": ["name", "chain_id", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Human-readable provider name."
+        },
+        "chain_id": {
+          "type": "integer",
+          "description": "EVM chain ID (0 for non-EVM providers)."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["ethereum", "arweave", "transparency-log", "noop"],
+          "description": "Anchoring layer type."
+        }
+      }
+    }
+  }
+}

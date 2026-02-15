@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schemas/memory-vault.schema.json",
+  "title": "Memory Vault",
+  "description": "Agent Passport Standard v0.2 — Memory Vault schema for encrypted agent state backup.",
+  "type": "object",
+  "required": ["@context", "type", "agent_id", "vault_hash", "encrypted_at", "key_hash", "items", "ciphertexts"],
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "const": "https://agentpassport.org/v0.2/memory-vault"
+    },
+    "type": {
+      "const": "MemoryVault"
+    },
+    "agent_id": {
+      "type": "string",
+      "pattern": "^did:key:z6Mk[A-Za-z0-9]+$"
+    },
+    "vault_hash": {
+      "$ref": "#/$defs/Hex256",
+      "description": "keccak256 of canonical vault metadata for tamper evidence."
+    },
+    "encrypted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "key_hash": {
+      "$ref": "#/$defs/Hex256",
+      "description": "keccak256 of the owner's encryption key. Platform MUST NOT store the raw key."
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["skills", "soul", "memories", "agent_config"]
+      },
+      "description": "List of stored item types."
+    },
+    "ciphertexts": {
+      "type": "object",
+      "description": "Map of item type → encrypted payload metadata.",
+      "properties": {
+        "skills": { "$ref": "#/$defs/CiphertextEntry" },
+        "soul": { "$ref": "#/$defs/CiphertextEntry" },
+        "memories": { "$ref": "#/$defs/CiphertextEntry" },
+        "agent_config": { "$ref": "#/$defs/CiphertextEntry" }
+      }
+    },
+    "anchoring": {
+      "type": "object",
+      "description": "Anchoring receipt for the vault hash. OPTIONAL.",
+      "properties": {
+        "provider": { "type": "string" },
+        "tx_hash": { "type": "string" },
+        "block": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "$defs": {
+    "Hex256": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{64}$"
+    },
+    "CiphertextEntry": {
+      "type": "object",
+      "required": ["ciphertext_hash", "algorithm", "iv"],
+      "properties": {
+        "ciphertext_hash": {
+          "$ref": "#/$defs/Hex256",
+          "description": "keccak256 of the encrypted ciphertext bytes."
+        },
+        "algorithm": {
+          "const": "AES-256-GCM"
+        },
+        "iv": {
+          "type": "string",
+          "description": "Base64-encoded 96-bit initialization vector."
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Size of the ciphertext in bytes."
+        }
+      }
+    }
+  }
+}

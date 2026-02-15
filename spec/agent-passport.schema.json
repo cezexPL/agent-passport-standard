@@ -1,0 +1,409 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schemas/agent-passport.schema.json",
+  "title": "Agent Passport",
+  "description": "Agent Passport Standard v0.2 — cryptographically verifiable identity document for AI agents.",
+  "type": "object",
+  "required": ["@context", "spec_version", "type", "id", "keys", "genesis_owner", "current_owner", "snapshot", "lineage", "proof"],
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "const": "https://agentpassport.org/v0.1"
+    },
+    "spec_version": {
+      "type": "string",
+      "pattern": "^0\\.[12]\\.\\d+$",
+      "description": "Specification version (semver). MUST be 0.1.x or 0.2.x for this schema."
+    },
+    "type": {
+      "const": "AgentPassport"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^did:key:z6Mk[A-Za-z0-9]+$",
+      "description": "Agent DID (did:key method, Ed25519)."
+    },
+    "keys": {
+      "$ref": "#/$defs/Keys"
+    },
+    "genesis_owner": {
+      "$ref": "#/$defs/GenesisOwner"
+    },
+    "current_owner": {
+      "$ref": "#/$defs/CurrentOwner"
+    },
+    "snapshot": {
+      "$ref": "#/$defs/Snapshot"
+    },
+    "lineage": {
+      "$ref": "#/$defs/Lineage"
+    },
+    "benchmarks": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/BenchmarkResult"
+      },
+      "description": "Map of suite_name → benchmark result. RECOMMENDED."
+    },
+    "attestations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Attestation"
+      },
+      "description": "Array of attestations. OPTIONAL."
+    },
+    "dna": {
+      "$ref": "#/$defs/DNADocument",
+      "description": "Standalone DNA document. OPTIONAL (v0.2+)."
+    },
+    "memory_vault": {
+      "$ref": "#/$defs/MemoryVault",
+      "description": "Memory vault metadata. OPTIONAL (v0.2+)."
+    },
+    "collaboration": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/CollaborationRecord" },
+      "description": "Recent collaboration history. OPTIONAL (v0.2+)."
+    },
+    "anchoring": {
+      "$ref": "#/$defs/Anchoring"
+    },
+    "proof": {
+      "$ref": "#/$defs/Proof"
+    }
+  },
+  "$defs": {
+    "Hex256": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{64}$",
+      "description": "Keccak-256 hash as 0x-prefixed lowercase hex (66 chars)."
+    },
+    "DID": {
+      "type": "string",
+      "pattern": "^did:key:z6Mk[A-Za-z0-9]+$"
+    },
+    "Timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp."
+    },
+    "Keys": {
+      "type": "object",
+      "required": ["signing"],
+      "additionalProperties": false,
+      "properties": {
+        "signing": {
+          "type": "object",
+          "required": ["algorithm", "public_key"],
+          "additionalProperties": false,
+          "properties": {
+            "algorithm": {
+              "const": "Ed25519"
+            },
+            "public_key": {
+              "type": "string",
+              "description": "Multibase-encoded Ed25519 public key (z-base58btc)."
+            }
+          }
+        },
+        "encryption": {
+          "type": ["object", "null"],
+          "description": "Encryption key. Reserved for future use."
+        },
+        "evm": {
+          "type": ["object", "null"],
+          "properties": {
+            "address": {
+              "type": "string",
+              "pattern": "^0x[0-9a-fA-F]{40}$",
+              "description": "Ethereum-compatible address."
+            }
+          },
+          "required": ["address"],
+          "additionalProperties": false
+        }
+      }
+    },
+    "GenesisOwner": {
+      "type": "object",
+      "required": ["id", "bound_at", "immutable"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/DID" },
+        "bound_at": { "$ref": "#/$defs/Timestamp" },
+        "immutable": {
+          "const": true,
+          "description": "MUST be true. Genesis owner MUST NOT change after creation."
+        }
+      }
+    },
+    "CurrentOwner": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/DID" },
+        "transferred_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/Timestamp" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "Snapshot": {
+      "type": "object",
+      "required": ["version", "hash", "prev_hash", "created_at", "skills", "soul", "policies"],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Monotonically increasing snapshot version."
+        },
+        "hash": { "$ref": "#/$defs/Hex256" },
+        "prev_hash": {
+          "oneOf": [
+            { "$ref": "#/$defs/Hex256" },
+            { "type": "null" }
+          ],
+          "description": "Hash of the previous snapshot. null for version 1."
+        },
+        "created_at": { "$ref": "#/$defs/Timestamp" },
+        "skills": {
+          "$ref": "#/$defs/Skills"
+        },
+        "soul": {
+          "$ref": "#/$defs/Soul"
+        },
+        "policies": {
+          "$ref": "#/$defs/Policies"
+        }
+      }
+    },
+    "Skills": {
+      "type": "object",
+      "required": ["entries", "frozen"],
+      "additionalProperties": false,
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SkillEntry"
+          }
+        },
+        "frozen": {
+          "type": "boolean",
+          "description": "If true, skills MUST NOT be modified."
+        }
+      }
+    },
+    "SkillEntry": {
+      "type": "object",
+      "required": ["name", "version", "description", "capabilities", "hash"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "description": { "type": "string" },
+        "capabilities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "source": {
+          "type": "string",
+          "format": "uri",
+          "description": "Provenance URL. RECOMMENDED."
+        },
+        "hash": { "$ref": "#/$defs/Hex256" }
+      }
+    },
+    "Soul": {
+      "type": "object",
+      "required": ["personality", "work_style", "constraints", "hash", "frozen"],
+      "additionalProperties": false,
+      "properties": {
+        "personality": { "type": "string" },
+        "work_style": { "type": "string" },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "hash": { "$ref": "#/$defs/Hex256" },
+        "frozen": { "type": "boolean" }
+      }
+    },
+    "Policies": {
+      "type": "object",
+      "required": ["policy_set_hash", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "policy_set_hash": { "$ref": "#/$defs/Hex256" },
+        "summary": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "Lineage": {
+      "type": "object",
+      "required": ["kind", "parents", "generation"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["single", "merge"]
+        },
+        "parents": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Hex256" },
+          "description": "Parent passport hashes. Empty for generation 0."
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heritage_score": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Computed heritage score. OPTIONAL (v0.2+)."
+        },
+        "founding_cohort": {
+          "type": "boolean",
+          "description": "Whether this agent is in the founding cohort. OPTIONAL (v0.2+)."
+        },
+        "traits_inherited": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Trait names inherited from parents. OPTIONAL (v0.2+)."
+        }
+      }
+    },
+    "BenchmarkResult": {
+      "type": "object",
+      "required": ["score", "passed", "suite_hash", "proof_hash", "tested_at"],
+      "additionalProperties": false,
+      "properties": {
+        "score": { "type": "number" },
+        "passed": { "type": "boolean" },
+        "suite_hash": { "$ref": "#/$defs/Hex256" },
+        "proof_hash": { "$ref": "#/$defs/Hex256" },
+        "tested_at": { "$ref": "#/$defs/Timestamp" }
+      }
+    },
+    "Attestation": {
+      "type": "object",
+      "required": ["type", "issuer", "credential_hash", "issued_at"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string" },
+        "issuer": { "$ref": "#/$defs/DID" },
+        "credential_hash": { "$ref": "#/$defs/Hex256" },
+        "issued_at": { "$ref": "#/$defs/Timestamp" },
+        "expires_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/Timestamp" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "Anchoring": {
+      "type": "object",
+      "required": ["provider", "contract", "tx_hash", "block", "verified"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": { "type": "string" },
+        "contract": {
+          "type": "string",
+          "pattern": "^0x[0-9a-fA-F]{40}$"
+        },
+        "tx_hash": { "type": "string" },
+        "block": { "type": "integer", "minimum": 0 },
+        "verified": { "type": "boolean" }
+      }
+    },
+    "Proof": {
+      "type": "object",
+      "required": ["type", "created", "verification_method", "proof_purpose", "proof_value"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "Ed25519Signature2020"
+        },
+        "created": { "$ref": "#/$defs/Timestamp" },
+        "verification_method": {
+          "type": "string",
+          "description": "DID URL referencing the signing key."
+        },
+        "proof_purpose": {
+          "const": "assertionMethod"
+        },
+        "proof_value": {
+          "type": "string",
+          "description": "Multibase-encoded Ed25519 signature."
+        }
+      }
+    },
+    "DNADocument": {
+      "type": "object",
+      "required": ["agent_id", "version", "skills", "soul", "policies", "dna_hash", "frozen"],
+      "properties": {
+        "@context": { "const": "https://agentpassport.org/v0.2/dna" },
+        "type": { "const": "AgentDNA" },
+        "agent_id": { "$ref": "#/$defs/DID" },
+        "version": { "type": "integer", "minimum": 1 },
+        "skills": { "type": "array" },
+        "soul": { "type": "object" },
+        "policies": { "type": "object" },
+        "dna_hash": { "$ref": "#/$defs/Hex256" },
+        "frozen": { "type": "boolean" },
+        "mutation_reason": { "type": ["string", "null"] }
+      }
+    },
+    "MemoryVault": {
+      "type": "object",
+      "required": ["vault_hash", "encrypted_at", "key_hash", "items"],
+      "properties": {
+        "vault_hash": { "$ref": "#/$defs/Hex256" },
+        "encrypted_at": { "$ref": "#/$defs/Timestamp" },
+        "key_hash": { "$ref": "#/$defs/Hex256" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["skills", "soul", "memories", "agent_config"]
+          }
+        },
+        "anchoring": { "$ref": "#/$defs/Anchoring" }
+      }
+    },
+    "CollaborationRecord": {
+      "type": "object",
+      "required": ["job_id", "collaborators"],
+      "properties": {
+        "job_id": { "type": "string" },
+        "collaborators": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["agent_id", "role", "contribution_pct"],
+            "properties": {
+              "agent_id": { "$ref": "#/$defs/DID" },
+              "role": { "type": "string" },
+              "contribution_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+              "receipt_hash": { "$ref": "#/$defs/Hex256" }
+            }
+          }
+        },
+        "trust_signals": {
+          "type": "object",
+          "properties": {
+            "reliability": { "type": "number", "minimum": 0, "maximum": 1 },
+            "quality": { "type": "number", "minimum": 0, "maximum": 1 },
+            "timeliness": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        }
+      }
+    }
+  }
+}

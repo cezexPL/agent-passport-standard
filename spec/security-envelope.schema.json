@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schemas/security-envelope.schema.json",
+  "title": "Security Envelope",
+  "description": "Agent Passport Standard v0.1 — security and capability constraints for agent execution.",
+  "type": "object",
+  "required": ["@context", "spec_version", "type", "agent_did", "agent_snapshot_hash", "capabilities", "sandbox", "memory", "trust", "envelope_hash", "proof"],
+  "additionalProperties": false,
+  "properties": {
+    "@context": { "const": "https://agentpassport.org/v0.1" },
+    "spec_version": { "type": "string", "pattern": "^0\\.1\\.\\d+$" },
+    "type": { "const": "SecurityEnvelope" },
+    "agent_did": { "$ref": "#/$defs/DID" },
+    "agent_snapshot_hash": { "$ref": "#/$defs/Hex256" },
+    "capabilities": {
+      "type": "object",
+      "required": ["allowed", "denied"],
+      "additionalProperties": false,
+      "properties": {
+        "allowed": { "type": "array", "items": { "type": "string" } },
+        "denied": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "sandbox": {
+      "type": "object",
+      "required": ["runtime", "resources", "network", "filesystem"],
+      "additionalProperties": false,
+      "properties": {
+        "runtime": { "type": "string", "enum": ["gvisor", "firecracker", "wasm", "none"] },
+        "resources": {
+          "type": "object",
+          "required": ["cpu_cores", "memory_mb", "disk_mb", "timeout_seconds", "max_pids"],
+          "additionalProperties": false,
+          "properties": {
+            "cpu_cores": { "type": "number", "minimum": 0 },
+            "memory_mb": { "type": "integer", "minimum": 0 },
+            "disk_mb": { "type": "integer", "minimum": 0 },
+            "timeout_seconds": { "type": "integer", "minimum": 0 },
+            "max_pids": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "network": {
+          "type": "object",
+          "required": ["policy"],
+          "additionalProperties": false,
+          "properties": {
+            "policy": { "type": "string", "enum": ["deny-all", "allow-list", "unrestricted"] },
+            "allowed_egress": { "type": "array", "items": { "type": "string" } },
+            "dns_resolution": { "type": "boolean" }
+          }
+        },
+        "filesystem": {
+          "type": "object",
+          "required": ["writable_paths", "readonly_paths", "denied_paths"],
+          "additionalProperties": false,
+          "properties": {
+            "writable_paths": { "type": "array", "items": { "type": "string" } },
+            "readonly_paths": { "type": "array", "items": { "type": "string" } },
+            "denied_paths": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "required": ["isolation", "policy", "rules", "vault"],
+      "additionalProperties": false,
+      "properties": {
+        "isolation": { "type": "string", "enum": ["strict", "shared-read", "none"] },
+        "policy": { "type": "string" },
+        "rules": {
+          "type": "object",
+          "required": ["dna_copyable", "memory_copyable", "context_shared", "logs_retained", "logs_content_visible"],
+          "additionalProperties": false,
+          "properties": {
+            "dna_copyable": { "type": "boolean" },
+            "memory_copyable": { "type": "boolean" },
+            "context_shared": { "type": "boolean" },
+            "logs_retained": { "type": "boolean" },
+            "logs_content_visible": { "type": "boolean" }
+          }
+        },
+        "vault": {
+          "type": "object",
+          "required": ["type", "encryption", "key_holder"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "type": "string", "enum": ["platform-managed", "self-hosted", "none"] },
+            "encryption": { "type": "string" },
+            "key_holder": { "type": "string" }
+          }
+        }
+      }
+    },
+    "trust": {
+      "type": "object",
+      "required": ["tier", "attestation_count", "highest_attestation", "benchmark_coverage", "anomaly_score"],
+      "additionalProperties": false,
+      "properties": {
+        "tier": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "attestation_count": { "type": "integer", "minimum": 0 },
+        "highest_attestation": { "type": "string" },
+        "benchmark_coverage": { "type": "number", "minimum": 0, "maximum": 1 },
+        "anomaly_score": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "envelope_hash": { "$ref": "#/$defs/Hex256" },
+    "proof": { "$ref": "#/$defs/Proof" }
+  },
+  "$defs": {
+    "Hex256": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "DID": { "type": "string", "pattern": "^did:key:z6Mk[A-Za-z0-9]+$" },
+    "Timestamp": { "type": "string", "format": "date-time" },
+    "Proof": {
+      "type": "object",
+      "required": ["type", "created", "verification_method", "proof_purpose", "proof_value"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "Ed25519Signature2020" },
+        "created": { "$ref": "#/$defs/Timestamp" },
+        "verification_method": { "type": "string" },
+        "proof_purpose": { "const": "assertionMethod" },
+        "proof_value": { "type": "string" }
+      }
+    }
+  }
+}

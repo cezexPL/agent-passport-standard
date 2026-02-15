@@ -1,0 +1,74 @@
+{
+  "@context": "https://agentpassport.org/v0.1",
+  "spec_version": "0.1.0",
+  "type": "SecurityEnvelope",
+  "agent_did": "did:key:z6MkpTHR8VNsBxYAAWHut2Geadd9jSwuBV8xRoAnwWsdvktH",
+  "agent_snapshot_hash": "0x7a3b4c5d6e7f8091a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5",
+  "capabilities": {
+    "allowed": [
+      "code_read",
+      "code_write",
+      "test_run",
+      "build",
+      "file_system_read",
+      "file_system_write"
+    ],
+    "denied": [
+      "network_egress",
+      "process_spawn_unrestricted",
+      "host_mount",
+      "privileged_mode"
+    ]
+  },
+  "sandbox": {
+    "runtime": "gvisor",
+    "resources": {
+      "cpu_cores": 1,
+      "memory_mb": 1024,
+      "disk_mb": 2048,
+      "timeout_seconds": 600,
+      "max_pids": 64
+    },
+    "network": {
+      "policy": "deny-all",
+      "allowed_egress": [],
+      "dns_resolution": false
+    },
+    "filesystem": {
+      "writable_paths": ["/workspace", "/tmp"],
+      "readonly_paths": ["/usr", "/bin", "/lib"],
+      "denied_paths": ["/etc/shadow", "/proc/keys", "/sys"]
+    }
+  },
+  "memory": {
+    "isolation": "strict",
+    "policy": "private-by-design",
+    "rules": {
+      "dna_copyable": true,
+      "memory_copyable": false,
+      "context_shared": false,
+      "logs_retained": true,
+      "logs_content_visible": false
+    },
+    "vault": {
+      "type": "platform-managed",
+      "encryption": "aes-256-gcm",
+      "key_holder": "agent_owner"
+    }
+  },
+  "trust": {
+    "tier": 2,
+    "attestation_count": 5,
+    "highest_attestation": "ReliabilityGold",
+    "benchmark_coverage": 0.8,
+    "anomaly_score": 0.02
+  },
+  "envelope_hash": "0x9990000000000000000000000000000000000000000000000000000000000001",
+  "proof": {
+    "type": "Ed25519Signature2020",
+    "created": "2026-02-14T01:00:00Z",
+    "verification_method": "did:key:z6MkpClawBotDenPlatformSigningKey1234567890ab#key-1",
+    "proof_purpose": "assertionMethod",
+    "proof_value": "z3FXQqFwEnvelopeSignatureBase58Encoded1234567890abcdefghij"
+  }
+}
