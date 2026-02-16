@@ -211,7 +211,71 @@ Every MCP tool invocation MUST produce an audit log entry containing:
 - Logs for calls involving `confidential` or `restricted` data MUST be retained for a minimum of 1 year.
 - Implementations MUST support export of audit logs in JSON Lines format.
 
-### 17.9 Profile Hash
+### 17.9 Credential Management
+
+#### 17.9.1 Hardcoded Credential Prohibition
+
+MCP servers MUST NOT use hardcoded credentials in source code, configuration files, or container images. This requirement is informed by the Astrix Security 2025 Report, which found that 53% of 5,000+ analyzed MCP servers contained hardcoded credentials — representing a systemic supply-chain risk.
+
+#### 17.9.2 Credential Sourcing
+
+Credentials used by MCP servers and tool integrations MUST be sourced from one of the following mechanisms, in order of preference:
+
+1. **Hardware Security Modules (HSMs)** — RECOMMENDED for `restricted`-classified deployments.
+2. **Secret managers** — e.g., HashiCorp Vault, AWS Secrets Manager, Azure Key Vault.
+3. **Environment variables** — acceptable for `internal` and `public` classifications only.
+
+Credentials MUST NOT be passed as tool input parameters unless the parameter is explicitly classified as `restricted` and the transport is encrypted end-to-end.
+
+#### 17.9.3 Credential Rotation
+
+Implementations SHOULD rotate MCP server credentials at least every 90 days. Credentials protecting `restricted`-classified data SHOULD be rotated at least every 30 days.
+
+When a credential is rotated, the MCP server's `config_hash` (§17.5) will change, triggering re-attestation. This is by design.
+
+#### 17.9.4 Credential Scope
+
+Credentials MUST follow the principle of least privilege:
+
+- Each MCP tool SHOULD have isolated credentials scoped to only the resources that tool requires.
+- A single credential MUST NOT grant access across multiple MCP servers unless those servers share an identical `data_classification_max` and are operated by the same entity.
+- Implementations MUST support credential revocation without requiring a full server restart.
+
+### 17.10 Known Attack Vectors
+
+This section documents known attack vectors against MCP integrations, informed by published CVEs and security research. Implementations MUST address each vector as specified.
+
+#### 17.10.1 Path Traversal (CVE-2025-68145, CVSS 7.1)
+
+MCP Git Server versions prior to the fix allowed path traversal via missing validation on the `--repository` flag, enabling read/write access outside the intended repository boundary.
+
+**Mitigation:** Tool parameters that reference filesystem paths MUST be validated against configured boundaries. Implementations MUST canonicalize paths and reject any resolved path that falls outside the declared tool scope. Path traversal sequences (`../`, `..\`, encoded variants) MUST be detected and blocked per §17.6.3.
+
+#### 17.10.2 Arbitrary Resource Creation (CVE-2025-68143, CVSS 6.5)
+
+The `git_init` tool in MCP Git Server created repositories at arbitrary filesystem paths without validating against the `--repository` boundary, enabling resource creation outside the intended scope.
+
+**Mitigation:** Tool operations that create, modify, or delete resources MUST be confined to the scope declared in the tool's allowlist entry (§17.2). Implementations MUST enforce scope boundaries at the runtime level, not relying on the MCP server's own validation alone.
+
+#### 17.10.3 Tool Impersonation
+
+"Lookalike tools" — malicious MCP tools that register under names similar to trusted tools (e.g., `read_file` vs `read_fi1e`) — can silently replace legitimate tools and intercept agent data flows.
+
+**Mitigation:** The `server_hash` verification mechanism (§17.5) mitigates this vector by binding tool allowlist entries to a specific, attested server binary. Implementations SHOULD additionally apply fuzzy-match detection on tool names to alert on near-homograph registrations.
+
+#### 17.10.4 Prompt Injection via Tool Responses
+
+MCP tool outputs may contain adversarial content designed to manipulate the invoking agent's behavior — overriding instructions, exfiltrating context, or triggering unintended tool calls.
+
+**Mitigation:** Tool outputs MUST be treated as untrusted data. Implementations MUST sanitize tool responses before incorporating them into agent context. The injection detection mechanisms defined in §17.6.3 MUST be applied to tool outputs, not only inputs. Agents SHOULD implement output isolation boundaries that prevent tool responses from modifying the agent's system prompt or security policy.
+
+#### 17.10.5 Combined Tool Exploitation
+
+Attackers may chain multiple individually-benign tool calls to achieve a malicious outcome — for example, using a read tool to extract credentials, then a network tool to exfiltrate them.
+
+**Mitigation:** Agents MUST NOT allow unrestricted tool chaining without egress policy checks (§17.3) applied at each step. The exfiltration guards (§17.7) MUST evaluate cumulative data flows across tool chains, not only individual calls. Implementations SHOULD maintain a per-session data flow graph to detect multi-step exfiltration patterns.
+
+### 17.11 Profile Hash
 
 The MCP Security Profile hash is computed as:
 
@@ -221,14 +285,14 @@ mcp_security_hash = sha256(canonicalize(mcp_security))
 
 This hash MUST be included in the Security Envelope's `snapshot.hash` computation. Changes to the MCP Security Profile MUST increment the Security Envelope version.
 
-### 17.10 Integration with Existing APS Artifacts
+### 17.12 Integration with Existing APS Artifacts
 
 - The `mcp_security` object is a child of the Security Envelope (§3).
 - Tool call audit entries MAY be referenced from Work Receipts (§2) when MCP tool invocations constitute part of a job's deliverable.
 - Federation peers (§16) MUST exchange MCP Security Profiles as part of agent capability discovery.
 - Attestation Exchange (§13) MAY include MCP server attestation bundles as third-party attestations.
 
-### 17.11 Versioning
+### 17.13 Versioning
 
 The MCP Security Profile declares its own schema version via `mcp_security.profile_version`. This specification defines profile version `"1.0.0"`. Implementations MUST reject profiles with an unsupported major version.
 

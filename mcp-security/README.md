@@ -333,6 +333,36 @@ This hash is included in the Security Envelope's `snapshot.hash`. Changes to the
 
 ---
 
+## Real-World Vulnerabilities
+
+The following CVEs and research findings demonstrate why the controls in this specification are necessary. These are not theoretical — they represent exploits found in production MCP server deployments.
+
+### CVE-2025-68145 — Path Traversal in MCP Git Server (CVSS 7.1)
+
+Missing path validation on the `--repository` flag allowed attackers to read and write files outside the intended repository boundary. **APS-MCP mitigation:** Tool parameters referencing filesystem paths **MUST** be validated against configured boundaries (§17.6, §17.10.1). Path traversal sequences (`../`) **MUST** be detected and blocked.
+
+### CVE-2025-68143 — Arbitrary Resource Creation (CVSS 6.5)
+
+The `git_init` tool created repositories at arbitrary filesystem paths without validating against the `--repository` boundary. **APS-MCP mitigation:** Tool operations **MUST** be confined to declared scope (§17.2, §17.10.2). Runtime-level enforcement is required — do not rely on server-side validation alone.
+
+### Hardcoded Credentials — Astrix Security 2025 Report
+
+Analysis of 5,000+ MCP servers found that **53% used hardcoded credentials** in source code or configuration files. **APS-MCP mitigation:** Credentials **MUST** be sourced from environment variables, secret managers, or HSMs (§17.9). Rotation every 90 days is **RECOMMENDED**.
+
+### Prompt Injection via Tool Responses (April 2025)
+
+Researchers demonstrated that adversarial content in MCP tool outputs can override agent instructions, exfiltrate context, or trigger unintended tool calls. **APS-MCP mitigation:** Tool outputs **MUST** be treated as untrusted data (§17.10.4). Injection detection (§17.6) **MUST** apply to outputs, not only inputs.
+
+### Tool Impersonation — Lookalike Tools (April 2025)
+
+Malicious MCP tools registering under names similar to trusted tools (e.g., `read_file` vs `read_fi1e`) can silently intercept agent data flows. **APS-MCP mitigation:** `server_hash` verification (§17.5, §17.10.3) binds tools to attested server binaries.
+
+### Combined Tool Exploitation (April 2025)
+
+Chaining multiple individually-benign tool calls to achieve exfiltration — e.g., read credentials with one tool, send them via another. **APS-MCP mitigation:** Egress policy checks (§17.3) at each step, cumulative exfiltration guards (§17.7), and per-session data flow graphs (§17.10.5).
+
+---
+
 ## Example Policies
 
 | File | Use Case | Description |
