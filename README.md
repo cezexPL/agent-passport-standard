@@ -233,6 +233,24 @@ cd typescript && npx vitest run
 
 ---
 
+## 🔌 MCP Server (Claude Code, Cursor, Windsurf)
+
+Install the APS Identity MCP server to give your AI agent a cryptographic identity:
+
+```bash
+# Claude Code
+claude mcp add aps-identity-mcp
+
+# Or run directly
+npx aps-identity-mcp
+```
+
+Available tools: `aps_identity_create`, `aps_identity_show`, `aps_sign_work`, `aps_verify`, `aps_export_passport`, `aps_import_passport`, `aps_attest`
+
+See [mcp-server/README.md](./mcp-server/README.md) for full documentation.
+
+---
+
 ## Specification
 
 📖 **[Full Specification (v1.0)](./spec/SPECIFICATION.md)** — 12 sections covering all artifacts, cryptographic primitives, anchoring, DNA, lineage, memory vault, and collaboration history.
