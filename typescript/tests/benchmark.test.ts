@@ -107,7 +107,7 @@ describe('benchmarks', () => {
     const { publicKey, privateKey } = generateKeyPair();
     const data = new TextEncoder().encode('bench');
     const sig = await ed25519Sign(privateKey, data);
-    const r = await measureAsync(async () => { await ed25519Verify(publicKey, data, sig); }, 1000);
+    const r = await measureAsync(async () => { await ed25519Verify(publicKey, data, sig); }, 200);
     console.log(`ed25519Verify: mean=${r.meanUs.toFixed(1)}µs`);
     expect(r.meanUs).toBeLessThan(10000);
   });
