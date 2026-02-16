@@ -251,6 +251,97 @@ See [mcp-server/README.md](./mcp-server/README.md) for full documentation.
 
 ---
 
+## 🌐 APS SiteTrust — Web Bot Trust Verification
+
+APS SiteTrust extends the Agent Passport Standard to the web. Website owners install a lightweight plugin to detect, verify, and monitor AI bots visiting their site.
+
+### How It Works
+
+```
+Website (WordPress/Joomla/HTML)
+  └── SiteTrust Plugin
+        ├── Detects bot requests (15+ AI bot types)
+        ├── Verifies identity via APS (< 100ms)
+        ├── Logs decisions (allow/review/deny)
+        └── Reports to NORAD global network
+```
+
+### Install on Your Site
+
+**WordPress:**
+```bash
+# Download from norad.io/protect → Upload in wp-admin → Activate
+```
+
+**Joomla:**
+```bash
+# Download from norad.io/protect → Extensions → Install
+```
+
+**HTML (any site):**
+```html
+<script src="https://norad.io/site-trust.js" 
+        data-site-id="YOUR_SITE_ID" 
+        data-mode="monitor" async></script>
+```
+
+**Next.js:**
+```typescript
+// middleware.ts
+import { withSiteTrust } from '@aps/sitetrust-next'
+export default withSiteTrust({ siteId: 'YOUR_SITE_ID' })
+```
+
+**React:**
+```tsx
+import { SiteTrustProvider, TrustBadge } from '@aps/sitetrust-react'
+<SiteTrustProvider siteId="YOUR_SITE_ID">
+  <App />
+  <TrustBadge />
+</SiteTrustProvider>
+```
+
+### Modes
+
+| Mode | Behavior |
+|------|----------|
+| **Monitor** | Log only. No blocking. Default. |
+| **Soft** | Block high-risk actions (form submit, checkout) |
+| **Enforce** | Block all denied bots |
+
+### Safety Challenge
+
+APS defines an open, signed verification prompt that websites can send to cooperating bots:
+
+1. Site sends `APS-Challenge` header with signed nonce
+2. Bot responds with skill hashes and self-assessment
+3. Response verified against APS registry
+4. Bot trust score updated globally
+
+The challenge is **transparent, voluntary, and open source**. See [spec/safety-challenge.md](./spec/safety-challenge.md).
+
+📦 **Download plugins:** [norad.io/protect](https://norad.io/protect)  
+📖 **Full spec:** [spec/sitetrust-extension.md](./spec/sitetrust-extension.md)  
+🔌 **Plugin docs:** [docs/sitetrust-plugins.md](./docs/sitetrust-plugins.md)
+
+---
+
+## 🌍 NORAD.io — Global Bot Monitoring
+
+[NORAD.io](https://norad.io) is a real-time global map of AI bot activity, powered by the APS SiteTrust plugin network.
+
+- 🗺️ **Live world map** showing bot detections with geolocation
+- 📊 **Global statistics** — bot types, risk distribution, threat trends
+- 🔴 **Threat detection** — skill infections, prompt override attempts
+- 🛡️ **Network effect** — more sites → better detection → safer internet
+
+Every SiteTrust plugin installation contributes anonymized telemetry to the NORAD network, creating a global early-warning system for AI bot threats.
+
+🌐 **Live map:** [norad.io](https://norad.io)  
+📖 **Documentation:** [docs/norad.md](./docs/norad.md)
+
+---
+
 ## Specification
 
 📖 **[Full Specification (v1.0)](./spec/SPECIFICATION.md)** — 12 sections covering all artifacts, cryptographic primitives, anchoring, DNA, lineage, memory vault, and collaboration history.
@@ -297,7 +388,9 @@ agent-passport-standard/
 │   ├── execution-attestation.md   # §20 Execution Attestation (v1.1)
 │   ├── anti-sybil-reputation.md   # §21 Anti-Sybil Reputation Framework (v1.1)
 │   ├── merkle-anchoring.md        # §22 Merkle Proofs & On-Chain Anchoring (v1.1)
-│   └── a2a-security.md            # §23 A2A Security & Cross-Agent Trust (v1.1)
+│   ├── a2a-security.md            # §23 A2A Security & Cross-Agent Trust (v1.1)
+│   ├── sitetrust-extension.md     # §24 APS SiteTrust Extension
+│   └── safety-challenge.md        # §25 Safety Challenge Protocol
 ├── go/                            # Go SDK (github.com/cezexPL/agent-passport-standard/go)
 │   ├── passport/                  # Passport create/verify
 │   ├── receipt/                   # Work Receipt handling
@@ -328,6 +421,9 @@ agent-passport-standard/
 │   ├── example-recovery.json
 │   ├── mcp-integration/           # MCP interop example
 │   └── a2a-exchange/              # A2A interop example
+├── docs/                          # Documentation
+│   ├── sitetrust-plugins.md       # Plugin installation guides
+│   └── norad.md                   # NORAD.io documentation
 ├── CONTRIBUTING.md
 └── LICENSE                        # Apache 2.0
 ```
@@ -337,16 +433,16 @@ agent-passport-standard/
 ## How It Fits In the AI Agent Ecosystem
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                   AI Agent Standards                     │
-├─────────────┬─────────────┬─────────────┬───────────────┤
-│   MCP       │    A2A      │  AGENTS.md  │  Agent        │
-│   (Tools)   │  (Comms)    │  (Repos)    │  Passport     │
-│             │             │             │  (Identity)   │
-│  "What can  │ "How agents │ "How to     │ "Who is this  │
-│   I use?"   │  talk"      │  behave in  │  agent? What  │
-│             │             │  this repo" │  has it done?" │
-└─────────────┴─────────────┴─────────────┴───────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                      AI Agent Standards                          │
+├──────────┬──────────┬──────────┬──────────────┬─────────────────┤
+│   MCP    │   A2A    │ AGENTS.md│   Agent      │  APS SiteTrust  │
+│  (Tools) │ (Comms)  │ (Repos)  │  Passport    │  (Web Trust)    │
+│          │          │          │  (Identity)  │                 │
+│ "What can│ "How     │ "How to  │ "Who is this │ "Is this bot    │
+│  I use?" │  agents  │  behave" │  agent?"     │  safe for my    │
+│          │  talk"   │          │              │  website?"      │
+└──────────┴──────────┴──────────┴──────────────┴─────────────────┘
 ```
 
 Agent Passport is **complementary** to MCP, A2A, and AGENTS.md — not a replacement. It provides the identity and trust layer that ties them all together.
@@ -497,6 +593,7 @@ Run benchmarks: `cd go && go test -bench=. -benchmem .`
 - [x] **v0.2** — Extended: Agent DNA, Lineage & Heritage, Memory Vault, Collaboration History
 - [x] **v0.3** — SDK: Python SDK, TypeScript SDK, CI/CD, Cross-SDK Conformance
 - [x] **v1.0** — Stable: Multi-chain anchoring, attestation exchange, security audit, RFC-style spec
+- [ ] **v1.1** — SiteTrust: Web bot trust verification, WordPress/Joomla/React plugins, NORAD.io global monitoring, Safety Challenge protocol
 
 ---
 
