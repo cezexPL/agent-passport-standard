@@ -5,8 +5,8 @@ const HEX64 = '0xabcdef0123456789abcdef0123456789abcdef0123456789abcdef012345678
 const DID = 'did:key:z6MkpTHR8VNsBxYAAWHut2Geadd9jSwuBV8xRoAnwWsdvktH';
 
 const validPassport = () => ({
-  '@context': 'https://agentpassport.org/v0.1',
-  spec_version: '0.1.0',
+  '@context': 'https://agentpassport.org/v1.0',
+  spec_version: '1.0.0',
   type: 'AgentPassport',
   id: DID,
   keys: { signing: { algorithm: 'Ed25519', public_key: 'z6MkpTHR' } },
