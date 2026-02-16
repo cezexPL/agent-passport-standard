@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentpassport.org/schemas/federation-discovery.schema.json",
   "title": "APS Federation Discovery",
-  "description": "Well-known federation discovery document for Agent Passport Standard platforms. Served at /.well-known/aps-federation.",
+  "description": "Well-known federation discovery document for Agent Passport Standard platforms. Served at /.well-known/agent-passport-standard.",
   "type": "object",
   "required": ["type", "version", "issuer_did", "endpoints", "supported_dids"],
   "additionalProperties": false,

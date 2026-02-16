@@ -1,7 +1,7 @@
-# Agent Passport Standard (APS) — Specification v0.2
+# Agent Passport Standard (APS) — Specification v1.0
 
 **Status:** Draft  
-**Version:** 0.2.0  
+**Version:** 1.0.0  
 **Date:** 2026-02-14  
 **Author:** Cezary Grotowski <c.grotowski@gmail.com>  
 
@@ -52,10 +52,10 @@ An Agent Passport is a self-describing, signed JSON document that binds an agent
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `@context` | string | MUST | `"https://agentpassport.org/v0.1"` |
-| `spec_version` | string | MUST | Semver, `"0.1.0"` for this version. |
+| `@context` | string | MUST | `"https://agentpassport.org/v1.0"` |
+| `spec_version` | string | MUST | Semver, `"1.0.0"` for this version. |
 | `type` | string | MUST | `"AgentPassport"` |
-| `id` | string | MUST | Agent DID (`did:key:z6Mk...`). |
+| `id` | string | MUST | Agent DID (`did:key:z6Mk...` or `did:web:...`). |
 | `keys` | object | MUST | Signing key (Ed25519). Optional EVM address. |
 | `genesis_owner` | object | MUST | Original creator. `immutable` MUST be `true`. |
 | `current_owner` | object | MUST | Current owner. MAY differ from genesis_owner after transfer. |
@@ -271,6 +271,8 @@ Batch proofs use binary Merkle trees:
 - Node: `keccak256(left || right)` where `left < right` (sorted concatenation).
 - Proof: array of sibling hashes from leaf to root.
 
+For enhanced security, implementations SHOULD use domain separation: Leaf: `keccak256(0x00 || receipt_hash_bytes)`, Node: `keccak256(0x01 || min(left, right) || max(left, right))`. Implementations without domain separation MUST be accepted for backward compatibility.
+
 ---
 
 ## 7. Interoperability
@@ -398,7 +400,7 @@ DNA mutation occurs exclusively through an explicit version bump:
 
 A standalone DNA document MAY be published independently of the passport for interoperability. It MUST conform to the `dna.schema.json` schema and include:
 
-- `@context` — `"https://agentpassport.org/v0.2/dna"`
+- `@context` — `"https://agentpassport.org/v1.0/dna"`
 - `type` — `"AgentDNA"`
 - `agent_id` — DID of the owning agent.
 - `version` — Snapshot version this DNA corresponds to.
@@ -471,7 +473,7 @@ Platforms MAY designate the first N registered agents as a **Founding Cohort**:
 
 ### 10.8 Extended Lineage Fields
 
-For v0.2 compatibility, the `lineage` object MAY include:
+For v1.0 compatibility, the `lineage` object MAY include:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -619,7 +621,7 @@ Attestation exchange builds on existing W3C Verifiable Credentials infrastructur
 ### 13.2 Exchange Flow
 
 1. **Present** — Agent presents an attestation issued by Platform A to Platform B.
-2. **Resolve** — Platform B fetches the issuer's public key via DID resolution (`did:key` decoding or DID Document retrieval).
+2. **Resolve** — Platform B fetches the issuer's public key via DID resolution (`did:key` decoding or `did:web` DID Document retrieval).
 3. **Verify Signature** — Platform B verifies the attestation's Ed25519 signature against the issuer's public key.
 4. **Check Revocation** — Platform B checks the attestation's revocation status (OPTIONAL, see §13.5).
 5. **Check Expiry** — Platform B rejects attestations where `expirationDate` is in the past.
@@ -633,7 +635,7 @@ Attestations MUST conform to the [W3C Verifiable Credentials Data Model](https:/
 {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
-    "https://agentpassport.org/v0.2/attestation"
+    "https://agentpassport.org/v1.0/attestation"
   ],
   "type": ["VerifiableCredential", "AgentAttestation"],
   "issuer": "did:key:z6Mk...",
@@ -653,10 +655,12 @@ Attestations MUST conform to the [W3C Verifiable Credentials Data Model](https:/
     "created": "2026-01-15T12:00:00Z",
     "verificationMethod": "did:key:z6Mk...#key-1",
     "proofPurpose": "assertionMethod",
-    "proofValue": "<hex-encoded Ed25519 signature>"
+    "proofValue": "<hex-encoded Ed25519 signature (or multibase z-base58btc)>"
   }
 }
 ```
+
+> Implementations MUST accept both hex-encoded and multibase z-base58btc encoded signatures. Hex encoding is RECOMMENDED for v1.0.x.
 
 #### 13.3.1 Required Fields
 

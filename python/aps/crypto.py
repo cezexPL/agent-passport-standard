@@ -1,4 +1,4 @@
-"""Cryptographic primitives for the Agent Passport Standard v0.1."""
+"""Cryptographic primitives for the Agent Passport Standard v1.0."""
 from __future__ import annotations
 
 import hmac

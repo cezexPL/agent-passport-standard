@@ -1,11 +1,19 @@
 # Changelog
 
+## v1.0.2 — 2026-02-16
+- **Stabilization release**: unified version numbering across all schemas and specs to v1.0.x
+- Proof field names standardized to W3C camelCase: `verificationMethod`, `proofPurpose`, `proofValue`
+- Signature format: both hex-encoded and multibase z-base58btc accepted
+- Merkle trees: domain separation (0x00/0x01 prefix) RECOMMENDED, plain accepted for compatibility
+- Well-known endpoint unified to `/.well-known/agent-passport-standard`
+- DID support: all schemas now accept both `did:key` and `did:web`
+
 ## v0.3.0 — 2026-02-16
 
 ### New Schemas
 - **`bundle.schema.json`** — AgentPassportBundle schema for portable export/import of agent passports with associated work receipts, attestations, reputation summaries, and anchoring proofs. Context: `https://agentpassport.org/v0.2/bundle`.
 - **`reputation-summary.schema.json`** — Portable Reputation Summary schema aggregating per-agent performance metrics (jobs completed/verified, quality/timeliness scores, trust tier, benchmark scores) over a time period. Context: `https://agentpassport.org/v0.2/reputation`.
-- **`federation-discovery.schema.json`** — Well-Known Federation Discovery document (`/.well-known/aps-federation`) enabling platforms to advertise APS endpoints, supported DID methods, and blockchain anchoring configuration. Type: `APSFederationDiscovery`.
+- **`federation-discovery.schema.json`** — Well-Known Federation Discovery document (`/.well-known/agent-passport-standard`) enabling platforms to advertise APS endpoints, supported DID methods, and blockchain anchoring configuration. Type: `APSFederationDiscovery`.
 
 ### Notes
 - All new schemas use JSON Schema 2020-12 with consistent `$id` URLs under `agentpassport.org/schemas/`.

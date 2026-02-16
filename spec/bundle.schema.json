@@ -76,7 +76,7 @@
     },
     "Proof": {
       "type": "object",
-      "required": ["type", "created", "verification_method", "proof_purpose", "proof_value"],
+      "required": ["type", "created", "verificationMethod", "proofPurpose", "proofValue"],
       "additionalProperties": false,
       "properties": {
         "type": {
@@ -85,14 +85,14 @@
         "created": {
           "$ref": "#/$defs/Timestamp"
         },
-        "verification_method": {
+        "verificationMethod": {
           "type": "string",
           "description": "DID URL referencing the signing key."
         },
-        "proof_purpose": {
+        "proofPurpose": {
           "const": "assertionMethod"
         },
-        "proof_value": {
+        "proofValue": {
           "type": "string",
           "description": "Multibase-encoded Ed25519 signature."
         }

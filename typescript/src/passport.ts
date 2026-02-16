@@ -18,7 +18,7 @@ export class AgentPassport {
 
     const data: AgentPassportData = {
       '@context': 'https://agentpassport.org/v0.1',
-      spec_version: '0.1.0',
+      spec_version: '1.0.0',
       type: 'AgentPassport',
       id: cfg.id,
       keys: {
@@ -84,9 +84,9 @@ export class AgentPassport {
       this.data.proof = {
         type: 'Ed25519Signature2020',
         created: now,
-        verification_method: this.data.id + '#key-1',
-        proof_purpose: 'assertionMethod',
-        proof_value: sig,
+        verificationMethod: this.data.id + '#key-1',
+        proofPurpose: 'assertionMethod',
+        proofValue: sig,
       };
     } catch (e) {
       this.data.proof = savedProof;
@@ -102,7 +102,7 @@ export class AgentPassport {
 
     try {
       const canonical = canonicalizeJson(this.data);
-      return await ed25519Verify(publicKey, new TextEncoder().encode(canonical), proof.proof_value);
+      return await ed25519Verify(publicKey, new TextEncoder().encode(canonical), proof.proofValue);
     } finally {
       this.data.proof = proof;
     }

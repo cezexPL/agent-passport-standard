@@ -76,8 +76,8 @@
   "proof": {
     "type": "Ed25519Signature2020",
     "created": "2026-02-15T16:16:14Z",
-    "verification_method": "did:key:z6MkkMQwqqzaGVosmwTZcA6yGjHYfS6gkd3t4Nrdhgfas3p8#key-1",
-    "proof_purpose": "assertionMethod",
-    "proof_value": "57beedfd8cd2ef07583bbabe91f9dface1e611c9f280259bf87a1d4c877a958674bdd016adb25cf39ac1a09a247e1a4c261d679084b4383f265b128f23d8db0a"
+    "verificationMethod": "did:key:z6MkkMQwqqzaGVosmwTZcA6yGjHYfS6gkd3t4Nrdhgfas3p8#key-1",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "57beedfd8cd2ef07583bbabe91f9dface1e611c9f280259bf87a1d4c877a958674bdd016adb25cf39ac1a09a247e1a4c261d679084b4383f265b128f23d8db0a"
   }
 }

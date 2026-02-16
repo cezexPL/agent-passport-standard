@@ -208,7 +208,7 @@ This document does not specify:
 | MCP        | Tool integration       | APS skills MAY reference MCP tools    |
 | A2A        | Agent communication    | APS passports exchanged via A2A       |
 | AGENTS.md  | Repository behavior    | APS soul.constraints MAY reference    |
-| W3C DID    | Identifiers            | APS uses did:key identifiers          |
+| W3C DID    | Identifiers            | APS uses did:key and did:web identifiers |
 | W3C VC     | Verifiable credentials | APS proof model inspired by VC        |
 
 
@@ -328,9 +328,9 @@ MUST be the string `"AgentPassport"`.
 
 ### 3.3.4. id
 
-The agent's Decentralized Identifier.  MUST be a valid `did:key`
-identifier encoding an Ed25519 public key using the multicodec
-z-base58btc representation (prefix `z6Mk`).
+The agent's Decentralized Identifier.  MUST be a valid `did:key` or
+`did:web` identifier encoding an Ed25519 public key.  For `did:key`,
+the multicodec z-base58btc representation (prefix `z6Mk`) is used.
 
 ### 3.3.5. keys
 
@@ -1384,6 +1384,9 @@ Signature format:
 - Type: `Ed25519Signature2020`.
 - The `proofValue` is multibase-encoded (z-base58btc) over the raw
   64-byte Ed25519 signature.
+- Implementations MUST accept both hex-encoded and multibase
+  z-base58btc encoded signatures for interoperability.  The canonical
+  output format is hex-encoded for v1.0.x.
 
 ## 14.2. AES-256-GCM
 
@@ -1414,6 +1417,10 @@ Tree construction:
 3. Build the tree bottom-up, pairing adjacent leaves.
 4. If the number of leaves at any level is odd, the last leaf is
    promoted to the next level without hashing.
+
+Implementations without domain separation (i.e., without the `0x00`
+and `0x01` prefixes) MUST be accepted for backward compatibility with
+early v1.0.x deployments.
 
 
 # 15. Conformance

@@ -45,16 +45,16 @@ class AgentPassportBundle:
         self.proof = {
             "type": "Ed25519Signature2020",
             "created": now,
-            "verification_method": agent_did + "#key-1",
-            "proof_purpose": "assertionMethod",
-            "proof_value": sig,
+            "verificationMethod": agent_did + "#key-1",
+            "proofPurpose": "assertionMethod",
+            "proofValue": sig,
         }
 
     def verify(self, public_key: Ed25519PublicKey) -> bool:
         if self.proof is None:
             return False
         canonical = crypto.canonicalize_json(self.to_dict(include_proof=False))
-        return crypto.ed25519_verify(public_key, canonical, self.proof["proof_value"])
+        return crypto.ed25519_verify(public_key, canonical, self.proof["proofValue"])
 
     def verify_all(self, public_key: Ed25519PublicKey) -> bool:
         """Verify bundle signature, nested passport, and all receipts."""

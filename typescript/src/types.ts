@@ -96,9 +96,9 @@ export interface Anchoring {
 export interface Proof {
   type: string;
   created: string;
-  verification_method: string;
-  proof_purpose: string;
-  proof_value: string;
+  verificationMethod: string;
+  proofPurpose: string;
+  proofValue: string;
 }
 
 // Passport

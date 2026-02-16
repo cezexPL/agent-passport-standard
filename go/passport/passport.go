@@ -139,9 +139,9 @@ type Anchoring struct {
 type Proof struct {
 	Type               string `json:"type"`
 	Created            string `json:"created"`
-	VerificationMethod string `json:"verification_method"`
-	ProofPurpose       string `json:"proof_purpose"`
-	ProofValue         string `json:"proof_value"`
+	VerificationMethod string `json:"verificationMethod"`
+	ProofPurpose       string `json:"proofPurpose"`
+	ProofValue         string `json:"proofValue"`
 }
 
 // Config is used to create a new passport.

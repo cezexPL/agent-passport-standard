@@ -59,7 +59,7 @@ class SecurityEnvelope:
 
         e = SecurityEnvelope()
         e.context = "https://agentpassport.org/v0.1"
-        e.spec_version = "0.1.0"
+        e.spec_version = "1.0.0"
         e.type = "SecurityEnvelope"
         e.agent_did = cfg.agent_did
         e.agent_snapshot_hash = cfg.agent_snapshot_hash
@@ -122,9 +122,9 @@ class SecurityEnvelope:
         self.proof = {
             "type": "Ed25519Signature2020",
             "created": now,
-            "verification_method": self.agent_did + "#key-1",
-            "proof_purpose": "assertionMethod",
-            "proof_value": sig,
+            "verificationMethod": self.agent_did + "#key-1",
+            "proofPurpose": "assertionMethod",
+            "proofValue": sig,
         }
 
     def verify(self, public_key: Ed25519PublicKey) -> bool:
@@ -134,7 +134,7 @@ class SecurityEnvelope:
         self.proof = None
         try:
             canonical = crypto.canonicalize_json(self.to_dict())
-            return crypto.ed25519_verify(public_key, canonical, proof["proof_value"])
+            return crypto.ed25519_verify(public_key, canonical, proof["proofValue"])
         finally:
             self.proof = proof
 

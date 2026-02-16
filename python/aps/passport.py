@@ -126,7 +126,7 @@ class AgentPassport:
 
         p = AgentPassport()
         p.context = "https://agentpassport.org/v0.1"
-        p.spec_version = "0.1.0"
+        p.spec_version = "1.0.0"
         p.type = "AgentPassport"
         p.id = cfg.id
 
@@ -193,9 +193,9 @@ class AgentPassport:
         self.proof = {
             "type": "Ed25519Signature2020",
             "created": now,
-            "verification_method": self.id + "#key-1",
-            "proof_purpose": "assertionMethod",
-            "proof_value": sig,
+            "verificationMethod": self.id + "#key-1",
+            "proofPurpose": "assertionMethod",
+            "proofValue": sig,
         }
 
     def verify(self, public_key: Ed25519PublicKey) -> bool:
@@ -205,7 +205,7 @@ class AgentPassport:
         self.proof = None
         try:
             canonical = crypto.canonicalize_json(self.to_dict())
-            return crypto.ed25519_verify(public_key, canonical, proof["proof_value"])
+            return crypto.ed25519_verify(public_key, canonical, proof["proofValue"])
         finally:
             self.proof = proof
 

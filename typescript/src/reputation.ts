@@ -46,16 +46,16 @@ export class ReputationSummary {
     this.data.proof = {
       type: 'Ed25519Signature2020',
       created: now,
-      verification_method: this.data.agent_did + '#key-1',
-      proof_purpose: 'assertionMethod',
-      proof_value: sig,
+      verificationMethod: this.data.agent_did + '#key-1',
+      proofPurpose: 'assertionMethod',
+      proofValue: sig,
     };
   }
 
   async verify(publicKey: Uint8Array): Promise<boolean> {
     if (!this.data.proof) return false;
     const canonical = canonicalizeJson(this.toDict(false));
-    return ed25519Verify(publicKey, new TextEncoder().encode(canonical), this.data.proof.proof_value);
+    return ed25519Verify(publicKey, new TextEncoder().encode(canonical), this.data.proof.proofValue);
   }
 
   toJSON(): string {

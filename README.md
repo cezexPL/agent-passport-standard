@@ -40,7 +40,7 @@ Agent Passport fills that gap.
 
 Agent Passport Standard defines **cryptographically verifiable artifacts** for AI agents operating in open ecosystems:
 
-### Core Artifacts (v0.1+)
+### Core Artifacts
 
 | Artifact | Purpose | Schema |
 |----------|---------|--------|
@@ -48,7 +48,7 @@ Agent Passport Standard defines **cryptographically verifiable artifacts** for A
 | **📋 Work Receipt** | Verifiable proof of completed work | [`work-receipt.schema.json`](./spec/work-receipt.schema.json) |
 | **🔒 Security Envelope** | Sandbox constraints, capability boundaries | [`security-envelope.schema.json`](./spec/security-envelope.schema.json) |
 
-### Extended Modules (v0.2+)
+### Extended Modules
 
 | Module | Purpose | Schema |
 |--------|---------|--------|
@@ -235,7 +235,7 @@ cd typescript && npx vitest run
 
 ## Specification
 
-📖 **[Full Specification (v0.2)](./spec/SPECIFICATION.md)** — 12 sections covering all artifacts, cryptographic primitives, anchoring, DNA, lineage, memory vault, and collaboration history.
+📖 **[Full Specification (v1.0)](./spec/SPECIFICATION.md)** — 12 sections covering all artifacts, cryptographic primitives, anchoring, DNA, lineage, memory vault, and collaboration history.
 
 ### Key Sections
 

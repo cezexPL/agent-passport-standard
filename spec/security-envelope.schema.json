@@ -109,18 +109,18 @@
   },
   "$defs": {
     "Hex256": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
-    "DID": { "type": "string", "pattern": "^did:key:z6Mk[A-Za-z0-9]+$" },
+    "DID": { "type": "string", "pattern": "^did:(key:z6Mk[A-Za-z0-9]+|web:.+)$", "description": "Decentralized Identifier (did:key or did:web)." },
     "Timestamp": { "type": "string", "format": "date-time" },
     "Proof": {
       "type": "object",
-      "required": ["type", "created", "verification_method", "proof_purpose", "proof_value"],
+      "required": ["type", "created", "verificationMethod", "proofPurpose", "proofValue"],
       "additionalProperties": false,
       "properties": {
         "type": { "const": "Ed25519Signature2020" },
         "created": { "$ref": "#/$defs/Timestamp" },
-        "verification_method": { "type": "string" },
-        "proof_purpose": { "const": "assertionMethod" },
-        "proof_value": { "type": "string" }
+        "verificationMethod": { "type": "string" },
+        "proofPurpose": { "const": "assertionMethod" },
+        "proofValue": { "type": "string" }
       }
     }
   }

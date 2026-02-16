@@ -53,9 +53,9 @@ type Period struct {
 type BundleProof struct {
 	Type               string `json:"type"`
 	Created            string `json:"created"`
-	VerificationMethod string `json:"verification_method"`
-	ProofPurpose       string `json:"proof_purpose"`
-	ProofValue         string `json:"proof_value"`
+	VerificationMethod string `json:"verificationMethod"`
+	ProofPurpose       string `json:"proofPurpose"`
+	ProofValue         string `json:"proofValue"`
 }
 
 // VerificationReport summarizes verification of all bundle components.

@@ -9,7 +9,7 @@ DID = "did:key:z6MkpTHR8VNsBxYAAWHut2Geadd9jSwuBV8xRoAnwWsdvktH"
 
 VALID_PASSPORT = {
     "@context": "https://agentpassport.org/v0.1",
-    "spec_version": "0.1.0",
+    "spec_version": "1.0.0",
     "type": "AgentPassport",
     "id": DID,
     "keys": {"signing": {"algorithm": "Ed25519", "public_key": "z6MkpTHR"}},
@@ -31,9 +31,9 @@ VALID_PASSPORT = {
     "proof": {
         "type": "Ed25519Signature2020",
         "created": "2025-01-01T00:00:00Z",
-        "verification_method": f"{DID}#keys-1",
-        "proof_purpose": "assertionMethod",
-        "proof_value": "zSIG",
+        "verificationMethod": f"{DID}#keys-1",
+        "proofPurpose": "assertionMethod",
+        "proofValue": "zSIG",
     },
 }
 

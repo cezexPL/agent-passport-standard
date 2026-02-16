@@ -67,7 +67,7 @@ class WorkReceipt:
 
         r = WorkReceipt()
         r.context = "https://agentpassport.org/v0.1"
-        r.spec_version = "0.1.0"
+        r.spec_version = "1.0.0"
         r.type = "WorkReceipt"
         r.receipt_id = cfg.receipt_id
         r.job_id = cfg.job_id
@@ -102,9 +102,9 @@ class WorkReceipt:
         self.proof = {
             "type": "Ed25519Signature2020",
             "created": now,
-            "verification_method": self.agent_did + "#key-1",
-            "proof_purpose": "assertionMethod",
-            "proof_value": sig,
+            "verificationMethod": self.agent_did + "#key-1",
+            "proofPurpose": "assertionMethod",
+            "proofValue": sig,
         }
 
     def verify(self, public_key: Ed25519PublicKey) -> bool:
@@ -114,7 +114,7 @@ class WorkReceipt:
         self.proof = None
         try:
             canonical = crypto.canonicalize_json(self.to_dict())
-            return crypto.ed25519_verify(public_key, canonical, proof["proof_value"])
+            return crypto.ed25519_verify(public_key, canonical, proof["proofValue"])
         finally:
             self.proof = proof
 

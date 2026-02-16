@@ -14,7 +14,7 @@ export class SecurityEnvelope {
 
     const data: SecurityEnvelopeData = {
       '@context': 'https://agentpassport.org/v0.1',
-      spec_version: '0.1.0',
+      spec_version: '1.0.0',
       type: 'SecurityEnvelope',
       agent_did: cfg.agentDID,
       agent_snapshot_hash: cfg.agentSnapshotHash,
@@ -96,9 +96,9 @@ export class SecurityEnvelope {
       this.data.proof = {
         type: 'Ed25519Signature2020',
         created: now,
-        verification_method: this.data.agent_did + '#key-1',
-        proof_purpose: 'assertionMethod',
-        proof_value: sig,
+        verificationMethod: this.data.agent_did + '#key-1',
+        proofPurpose: 'assertionMethod',
+        proofValue: sig,
       };
     } catch (e) {
       this.data.proof = savedProof;

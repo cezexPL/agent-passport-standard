@@ -112,14 +112,14 @@
     },
     "Proof": {
       "type": "object",
-      "required": ["type", "created", "verification_method", "proof_purpose", "proof_value"],
+      "required": ["type", "created", "verificationMethod", "proofPurpose", "proofValue"],
       "additionalProperties": false,
       "properties": {
         "type": { "const": "Ed25519Signature2020" },
         "created": { "$ref": "#/$defs/Timestamp" },
-        "verification_method": { "type": "string" },
-        "proof_purpose": { "const": "assertionMethod" },
-        "proof_value": { "type": "string" }
+        "verificationMethod": { "type": "string" },
+        "proofPurpose": { "const": "assertionMethod" },
+        "proofValue": { "type": "string" }
       }
     }
   }

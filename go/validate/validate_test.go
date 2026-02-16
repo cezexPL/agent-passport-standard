@@ -62,9 +62,9 @@ func validPassportMap() map[string]interface{} {
 		"proof": map[string]interface{}{
 			"type":                "Ed25519Signature2020",
 			"created":             "2025-01-01T00:00:00Z",
-			"verification_method": "did:key:z6MkpTHR8VNsBxYAAWHut2Geadd9jSwuBV8xRoAnwWsdvktH#keys-1",
-			"proof_purpose":       "assertionMethod",
-			"proof_value":         "zSIG",
+			"verificationMethod": "did:key:z6MkpTHR8VNsBxYAAWHut2Geadd9jSwuBV8xRoAnwWsdvktH#keys-1",
+			"proofPurpose":       "assertionMethod",
+			"proofValue":         "zSIG",
 		},
 	}
 }

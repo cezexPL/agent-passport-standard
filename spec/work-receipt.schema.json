@@ -8,7 +8,7 @@
   "additionalProperties": false,
   "properties": {
     "@context": { "const": "https://agentpassport.org/v0.1" },
-    "spec_version": { "type": "string", "pattern": "^0\\.1\\.\\d+$" },
+    "spec_version": { "type": "string", "pattern": "^1\\.0\\.\\d+$" },
     "type": { "const": "WorkReceipt" },
     "receipt_id": { "type": "string", "format": "uuid" },
     "job_id": { "type": "string", "format": "uuid" },
@@ -40,7 +40,8 @@
     },
     "DID": {
       "type": "string",
-      "pattern": "^did:key:z6Mk[A-Za-z0-9]+$"
+      "pattern": "^did:(key:z6Mk[A-Za-z0-9]+|web:.+)$",
+      "description": "Decentralized Identifier (did:key or did:web)."
     },
     "Timestamp": {
       "type": "string",
@@ -112,14 +113,14 @@
     },
     "Proof": {
       "type": "object",
-      "required": ["type", "created", "verification_method", "proof_purpose", "proof_value"],
+      "required": ["type", "created", "verificationMethod", "proofPurpose", "proofValue"],
       "additionalProperties": false,
       "properties": {
         "type": { "const": "Ed25519Signature2020" },
         "created": { "$ref": "#/$defs/Timestamp" },
-        "verification_method": { "type": "string" },
-        "proof_purpose": { "const": "assertionMethod" },
-        "proof_value": { "type": "string" }
+        "verificationMethod": { "type": "string" },
+        "proofPurpose": { "const": "assertionMethod" },
+        "proofValue": { "type": "string" }
       }
     }
   }

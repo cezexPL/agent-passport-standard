@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentpassport.org/schemas/agent-passport.schema.json",
   "title": "Agent Passport",
-  "description": "Agent Passport Standard v0.2 — cryptographically verifiable identity document for AI agents.",
+  "description": "Agent Passport Standard v1.0 — cryptographically verifiable identity document for AI agents. Supports did:key and did:web.",
   "type": "object",
   "required": ["@context", "spec_version", "type", "id", "keys", "genesis_owner", "current_owner", "snapshot", "lineage"],
   "additionalProperties": false,
@@ -12,16 +12,16 @@
     },
     "spec_version": {
       "type": "string",
-      "pattern": "^0\\.[12]\\.\\d+$",
-      "description": "Specification version (semver). MUST be 0.1.x or 0.2.x for this schema."
+      "pattern": "^1\\.0\\.\\d+$",
+      "description": "Specification version (semver). MUST be 1.0.x for this schema."
     },
     "type": {
       "const": "AgentPassport"
     },
     "id": {
       "type": "string",
-      "pattern": "^did:key:z6Mk[A-Za-z0-9]+$",
-      "description": "Agent DID (did:key method, Ed25519)."
+      "pattern": "^did:(key:z6Mk[A-Za-z0-9]+|web:.+)$",
+      "description": "Agent DID (did:key or did:web method)."
     },
     "keys": {
       "$ref": "#/$defs/Keys"
@@ -80,7 +80,8 @@
     },
     "DID": {
       "type": "string",
-      "pattern": "^did:key:z6Mk[A-Za-z0-9]+$"
+      "pattern": "^did:(key:z6Mk[A-Za-z0-9]+|web:.+)$",
+      "description": "Decentralized Identifier (did:key or did:web)."
     },
     "Timestamp": {
       "type": "string",
@@ -324,21 +325,21 @@
     },
     "Proof": {
       "type": "object",
-      "required": ["type", "created", "verification_method", "proof_purpose", "proof_value"],
+      "required": ["type", "created", "verificationMethod", "proofPurpose", "proofValue"],
       "additionalProperties": false,
       "properties": {
         "type": {
           "const": "Ed25519Signature2020"
         },
         "created": { "$ref": "#/$defs/Timestamp" },
-        "verification_method": {
+        "verificationMethod": {
           "type": "string",
           "description": "DID URL referencing the signing key."
         },
-        "proof_purpose": {
+        "proofPurpose": {
           "const": "assertionMethod"
         },
-        "proof_value": {
+        "proofValue": {
           "type": "string",
           "description": "Multibase-encoded Ed25519 signature."
         }

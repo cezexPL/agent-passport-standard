@@ -73,8 +73,8 @@
   "proof": {
     "type": "Ed25519Signature2020",
     "created": "2026-02-15T16:16:14Z",
-    "verification_method": "did:key:z6MkkMQwqqzaGVosmwTZcA6yGjHYfS6gkd3t4Nrdhgfas3p8#key-1",
-    "proof_purpose": "assertionMethod",
-    "proof_value": "ddb5a4cc34fa8c93ecb96119c63760cb23f5c512f3690df8a032024f3b7619073f88073c453ea05e690be1b7131bd9a2fc90009fefe5822515c4b0ecf7df5b06"
+    "verificationMethod": "did:key:z6MkkMQwqqzaGVosmwTZcA6yGjHYfS6gkd3t4Nrdhgfas3p8#key-1",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "ddb5a4cc34fa8c93ecb96119c63760cb23f5c512f3690df8a032024f3b7619073f88073c453ea05e690be1b7131bd9a2fc90009fefe5822515c4b0ecf7df5b06"
   }
 }

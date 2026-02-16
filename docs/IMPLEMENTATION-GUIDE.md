@@ -154,7 +154,7 @@ Assemble the full passport JSON with all required fields:
 1. Remove the `proof` field (if present) from the passport.
 2. Canonicalize the result (RFC 8785).
 3. Sign with Ed25519: `signature = Ed25519_Sign(privateKey, canonicalBytes)`.
-4. Encode the signature as multibase z-base58btc.
+4. Encode the signature as multibase z-base58btc (preferred) or hex-encoded string (also accepted).
 5. Add the `proof` field:
 
 ```json
