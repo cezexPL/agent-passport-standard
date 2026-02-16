@@ -161,7 +161,7 @@ pip install aps-sdk
 
 **TypeScript:**
 ```bash
-npm install aps-sdk
+npm install agent-passport-sdk
 ```
 
 ### Use the Go SDK

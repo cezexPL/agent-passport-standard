@@ -1,4 +1,5 @@
-import Ajv2020 from 'ajv/dist/2020.js';
+import Ajv2020_ from 'ajv/dist/2020.js';
+const Ajv2020 = (Ajv2020_ as any).default ?? Ajv2020_;
 import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -23,7 +24,7 @@ function makeValidator(schemaName: string) {
   const validate = ajv.compile(schema);
   return (data: unknown): void => {
     if (!validate(data)) {
-      const msg = validate.errors?.map(e => `${e.instancePath} ${e.message}`).join('; ') ?? 'validation failed';
+      const msg = validate.errors?.map((e: any) => `${e.instancePath} ${e.message}`).join('; ') ?? 'validation failed';
       throw new ValidationError(msg, validate.errors ?? undefined);
     }
   };
