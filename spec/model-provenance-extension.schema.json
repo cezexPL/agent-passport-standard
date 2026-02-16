@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schemas/model-provenance-extension.schema.json",
+  "title": "Model & Toolchain Provenance Extension",
+  "description": "APS v1.1 §18 — Supply-chain provenance fields for WorkReceipts.",
+  "type": "object",
+  "required": [
+    "model_digest",
+    "toolchain_digest",
+    "prompt_template_hash",
+    "policy_hash",
+    "runtime_version"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "model_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA-256 hash of the model weights/binary. Format: sha256:<hex>."
+    },
+    "model_digest_source": {
+      "type": "string",
+      "enum": ["self", "provider", "transparency", "unavailable"],
+      "description": "Origin of the model_digest value."
+    },
+    "toolchain_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA-256 hash of the JCS-canonicalized toolchain manifest."
+    },
+    "prompt_template_hash": {
+      "type": "string",
+      "pattern": "^keccak256:[0-9a-f]{64}$",
+      "description": "Keccak-256 hash of the system prompt / template (UTF-8, unexpanded)."
+    },
+    "policy_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA-256 hash of the JCS-canonicalized security policy configuration."
+    },
+    "runtime_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+      "description": "Semantic version of the agent runtime (SemVer 2.0.0)."
+    },
+    "parent_receipt_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "description": "Receipt IDs of parent WorkReceipts whose outputs were inputs to this task."
+    },
+    "pipeline_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID identifying the overall multi-step pipeline."
+    },
+    "step_index": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Zero-based position of this receipt within the pipeline."
+    },
+    "watermark": {
+      "$ref": "#/$defs/Watermark"
+    }
+  },
+  "$defs": {
+    "Watermark": {
+      "type": "object",
+      "required": ["standard", "version", "content_hash"],
+      "additionalProperties": false,
+      "properties": {
+        "standard": {
+          "type": "string",
+          "description": "Watermark standard identifier (e.g., 'C2PA')."
+        },
+        "version": {
+          "type": "string",
+          "description": "Version of the watermark standard."
+        },
+        "manifest_uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "URI to the full watermark manifest."
+        },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "SHA-256 hash of the watermarked content."
+        },
+        "signer_did": {
+          "type": "string",
+          "pattern": "^did:(key:z6Mk[A-Za-z0-9]+|web:.+)$",
+          "description": "DID of the watermark signer."
+        }
+      }
+    }
+  }
+}

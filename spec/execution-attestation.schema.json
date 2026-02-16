@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schema/v1.1/execution-attestation.json",
+  "title": "ExecutionAttestation",
+  "description": "APS v1.1 §20 — Binds agent work to a verifiable execution environment via cryptographic attestation.",
+  "type": "object",
+  "required": [
+    "type",
+    "version",
+    "envelope_hash",
+    "measurement",
+    "platform",
+    "nonce",
+    "timestamp",
+    "report_signature"
+  ],
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "ExecutionAttestation"
+    },
+    "version": {
+      "type": "string",
+      "const": "1.1"
+    },
+    "envelope_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hex digest of the referenced SecurityEnvelope."
+    },
+    "measurement": {
+      "$ref": "#/$defs/Measurement"
+    },
+    "platform": {
+      "$ref": "#/$defs/Platform"
+    },
+    "nonce": {
+      "type": "string",
+      "minLength": 64,
+      "pattern": "^[a-f0-9]+$",
+      "description": "Verifier-supplied challenge nonce (hex-encoded, minimum 32 bytes)."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp of attestation generation."
+    },
+    "report_signature": {
+      "type": "string",
+      "description": "Base64url-encoded signature over the JCS-canonicalized attestation (excluding this field)."
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "Measurement": {
+      "type": "object",
+      "required": ["runtime_hash", "config_hash"],
+      "properties": {
+        "runtime_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 of the runtime binary/image. For TEEs, the platform-specific enclave measurement."
+        },
+        "config_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 of runtime configuration (seccomp profile, capabilities, etc.)."
+        },
+        "memory_limits": {
+          "type": "string",
+          "pattern": "^[0-9]+(Ki|Mi|Gi|Ti)?$",
+          "description": "Memory allocation limit in Kubernetes quantity format."
+        },
+        "network_policy_hash": {
+          "type": "string",
+          "description": "SHA-256 of network policy, or 'none'/'unrestricted'."
+        },
+        "filesystem_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 of filesystem manifest (mounted volumes and permissions)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "Platform": {
+      "type": "object",
+      "required": ["type", "trust_level"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "sgx", "tdx", "sev", "trustzone", "nitro",
+            "gvisor", "firecracker", "wasm",
+            "container",
+            "self"
+          ],
+          "description": "Isolation technology identifier."
+        },
+        "vendor": {
+          "type": "string",
+          "description": "Optional vendor identifier (e.g., 'Intel', 'AMD', 'AWS')."
+        },
+        "version": {
+          "type": "string",
+          "description": "Platform or firmware version."
+        },
+        "trust_level": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "0=self-reported, 1=container-isolated, 2=sandbox, 3=hardware TEE."
+        }
+      },
+      "additionalProperties": false
+    },
+    "WorkReceiptAttestationBinding": {
+      "description": "Extension to WorkReceipt (§8) — optional attestation_hash field.",
+      "type": "object",
+      "properties": {
+        "attestation_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 hex digest of the complete ExecutionAttestation object."
+        }
+      }
+    },
+    "NonceChallenge": {
+      "description": "Verifier-to-executor nonce challenge message.",
+      "type": "object",
+      "required": ["nonce", "timestamp"],
+      "properties": {
+        "nonce": {
+          "type": "string",
+          "minLength": 64,
+          "pattern": "^[a-f0-9]+$"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    },
+    "VerificationResult": {
+      "description": "Result of attestation verification.",
+      "type": "object",
+      "required": ["status", "trust_level"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "VALID",
+            "VALID_DEGRADED",
+            "INVALID_NONCE",
+            "INVALID_SIGNATURE",
+            "INVALID_MEASUREMENT",
+            "INVALID_BINDING"
+          ]
+        },
+        "trust_level": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "details": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.1.0 — 2026-02-16
+
+### New Sections
+- **§17 MCP Security Profile** — Tool allowlists, egress policies, data classification, MCP server attestation, exfiltration guards
+- **§18 Model & Toolchain Provenance** — model_digest, toolchain_digest, prompt_template_hash in WorkReceipts, C2PA watermark support
+- **§19 Identity Continuity & Key Rotation** — Key rotation protocol, identity chain, recovery flow, upgrade persistence
+- **§20 Execution Attestation** — TEE/sandbox/container attestation binding to WorkReceipts, trust levels 0-3
+- **§21 Anti-Sybil Reputation Framework** — Weighted scoring, issuer tiers, temporal decay, anomaly detection, proof-of-cost
+- **§22 Merkle Proofs & On-Chain Anchoring** — Formal Merkle algorithm, multi-chain support, batch protocol, Arweave integration
+- **§23 A2A Security & Cross-Agent Trust** — Mutual auth, capability delegation, workflow accountability, agent discovery
+
+### Addresses
+- 8 topic clusters identified in AI agent security ecosystem analysis
+- Competitive gaps vs ERC-8004, Ritual, SAI, x402
+- Community feedback on cross-platform trust and MCP security
+
 ## v1.0.2 — 2026-02-16
 - **Stabilization release**: unified version numbering across all schemas and specs to v1.0.x
 - Proof field names standardized to W3C camelCase: `verificationMethod`, `proofPurpose`, `proofValue`

@@ -1016,6 +1016,24 @@ Platforms MAY synchronize trust registries:
 
 ---
 
+## Extended Specifications (v1.1)
+
+The following sections extend the core APS specification with advanced security and interoperability features:
+
+| Section | Title | File |
+|---------|-------|------|
+| §17 | MCP Security Profile | [mcp-security-profile.md](mcp-security-profile.md) |
+| §18 | Model & Toolchain Provenance | [model-provenance.md](model-provenance.md) |
+| §19 | Identity Continuity & Key Rotation | [identity-continuity.md](identity-continuity.md) |
+| §20 | Execution Attestation (TEE/Sandbox) | [execution-attestation.md](execution-attestation.md) |
+| §21 | Anti-Sybil Reputation Framework | [anti-sybil-reputation.md](anti-sybil-reputation.md) |
+| §22 | Merkle Proofs & On-Chain Anchoring | [merkle-anchoring.md](merkle-anchoring.md) |
+| §23 | A2A Security & Cross-Agent Trust | [a2a-security.md](a2a-security.md) |
+
+These sections are normative for APS v1.1+ implementations.
+
+---
+
 ## References
 
 - [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) — Key words for use in RFCs

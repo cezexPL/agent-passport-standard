@@ -1,0 +1,293 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/v1.1/mcp-security-profile.schema.json",
+  "title": "APS MCP Security Profile",
+  "description": "Schema for §17 MCP Security Profile of the Agent Passport Standard v1.1.",
+  "type": "object",
+  "required": [
+    "profile_version",
+    "mcp_tools_allowed",
+    "egress_policy",
+    "data_classification_default",
+    "io_validation",
+    "exfiltration_guards"
+  ],
+  "properties": {
+    "profile_version": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "MCP Security Profile schema version."
+    },
+    "mcp_tools_allowed": {
+      "type": "array",
+      "description": "Explicit allowlist of MCP tools the agent may invoke.",
+      "items": {
+        "type": "object",
+        "required": ["server_hash", "tool_name", "version"],
+        "properties": {
+          "server_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "SHA-256 hex hash of the MCP server attestation bundle."
+          },
+          "tool_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "Exact tool name as registered on the MCP server."
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Semver version or semver range."
+          },
+          "data_classification_max": {
+            "type": "string",
+            "enum": ["public", "internal", "confidential", "restricted"],
+            "default": "public",
+            "description": "Maximum data classification level this tool may process."
+          },
+          "input_schema": {
+            "$ref": "https://json-schema.org/draft/2020-12/schema",
+            "description": "JSON Schema for tool input validation."
+          },
+          "output_schema": {
+            "$ref": "https://json-schema.org/draft/2020-12/schema",
+            "description": "JSON Schema for tool output validation."
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of permitted use."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "egress_policy": {
+      "type": "object",
+      "required": ["default", "allow"],
+      "properties": {
+        "default": {
+          "type": "string",
+          "const": "deny",
+          "description": "Default egress policy. MUST be 'deny'."
+        },
+        "allow": {
+          "type": "array",
+          "description": "Permitted egress targets.",
+          "items": {
+            "type": "object",
+            "required": ["host"],
+            "properties": {
+              "host": {
+                "type": "string",
+                "description": "FQDN, IP address, or CIDR block. Wildcards (*.example.com) permitted for subdomains."
+              },
+              "ports": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65535
+                },
+                "default": [443],
+                "description": "Permitted port numbers."
+              },
+              "protocol": {
+                "type": "string",
+                "enum": ["tcp", "udp", "any"],
+                "default": "tcp"
+              },
+              "restricted_allowed": {
+                "type": "boolean",
+                "default": false,
+                "description": "If true, restricted-classified data may traverse this egress target."
+              },
+              "justification": {
+                "type": "string",
+                "description": "Human-readable reason this egress target is required."
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "data_classification_default": {
+      "type": "string",
+      "enum": ["public", "internal", "confidential", "restricted"],
+      "default": "restricted",
+      "description": "Default classification when no tag is present. MUST be 'restricted' per fail-secure policy."
+    },
+    "server_attestations": {
+      "type": "array",
+      "description": "Pre-registered MCP server attestation bundles.",
+      "items": {
+        "type": "object",
+        "required": ["binary_hash", "config_hash", "version", "attestation_signature"],
+        "properties": {
+          "binary_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "SHA-256 hash of the MCP server executable or container image."
+          },
+          "config_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "SHA-256 hash of the server configuration (RFC 8785 canonicalized)."
+          },
+          "version": {
+            "type": "string",
+            "description": "Semver version reported by the server."
+          },
+          "tls_fingerprint": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "SHA-256 fingerprint of the server's TLS certificate."
+          },
+          "attestation_signature": {
+            "type": "string",
+            "description": "Base64-encoded Ed25519 signature over the canonicalized bundle."
+          },
+          "operator_did": {
+            "type": "string",
+            "description": "DID of the MCP server operator whose key signed the attestation."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "io_validation": {
+      "type": "object",
+      "required": ["max_input_bytes", "max_output_bytes"],
+      "properties": {
+        "max_input_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1048576,
+          "description": "Maximum input payload size in bytes."
+        },
+        "max_output_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 10485760,
+          "description": "Maximum output payload size in bytes."
+        },
+        "max_batch_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 104857600,
+          "description": "Maximum aggregate payload per rolling 1-hour window."
+        },
+        "max_nesting_depth": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 32,
+          "description": "Maximum JSON nesting depth."
+        },
+        "injection_detection": {
+          "type": "object",
+          "properties": {
+            "prompt_injection": {
+              "type": "boolean",
+              "default": true
+            },
+            "command_injection": {
+              "type": "boolean",
+              "default": true
+            },
+            "serialization_attacks": {
+              "type": "boolean",
+              "default": true
+            },
+            "custom_modules": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "URIs of pluggable injection detection modules."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "exfiltration_guards": {
+      "type": "object",
+      "properties": {
+        "max_egress_bytes_per_hour": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 10485760
+        },
+        "max_egress_bytes_per_day": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 104857600
+        },
+        "max_unique_domains_per_hour": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 10
+        },
+        "max_tool_calls_per_minute": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 60
+        },
+        "response_action": {
+          "type": "string",
+          "enum": ["log", "suspend", "terminate", "notify"],
+          "default": "suspend",
+          "description": "Action when exfiltration threshold is exceeded."
+        },
+        "pattern_detection": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "encoding_escalation",
+              "chunked_exfiltration",
+              "classification_escalation",
+              "temporal_anomaly"
+            ]
+          },
+          "default": [
+            "encoding_escalation",
+            "chunked_exfiltration",
+            "classification_escalation",
+            "temporal_anomaly"
+          ],
+          "description": "Suspicious patterns to monitor."
+        }
+      },
+      "additionalProperties": false
+    },
+    "audit": {
+      "type": "object",
+      "properties": {
+        "retention_days": {
+          "type": "integer",
+          "minimum": 90,
+          "default": 90,
+          "description": "Minimum audit log retention in days."
+        },
+        "retention_days_sensitive": {
+          "type": "integer",
+          "minimum": 365,
+          "default": 365,
+          "description": "Retention for confidential/restricted data calls."
+        },
+        "anchor_to_ledger": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to anchor audit hashes per §4."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

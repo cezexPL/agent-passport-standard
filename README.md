@@ -272,7 +272,14 @@ agent-passport-standard/
 │   ├── bundle.schema.json         # Cross-platform export bundle schema
 │   ├── reputation-summary.schema.json # Portable reputation schema
 │   ├── federation-discovery.schema.json # Platform discovery schema
-│   └── test-vectors.json          # Conformance test vectors
+│   ├── test-vectors.json          # Conformance test vectors
+│   ├── mcp-security-profile.md    # §17 MCP Security Profile (v1.1)
+│   ├── model-provenance.md        # §18 Model & Toolchain Provenance (v1.1)
+│   ├── identity-continuity.md     # §19 Identity Continuity & Key Rotation (v1.1)
+│   ├── execution-attestation.md   # §20 Execution Attestation (v1.1)
+│   ├── anti-sybil-reputation.md   # §21 Anti-Sybil Reputation Framework (v1.1)
+│   ├── merkle-anchoring.md        # §22 Merkle Proofs & On-Chain Anchoring (v1.1)
+│   └── a2a-security.md            # §23 A2A Security & Cross-Agent Trust (v1.1)
 ├── go/                            # Go SDK (github.com/cezexPL/agent-passport-standard/go)
 │   ├── passport/                  # Passport create/verify
 │   ├── receipt/                   # Work Receipt handling
