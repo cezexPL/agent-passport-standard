@@ -382,27 +382,147 @@ When multi-key is used, the passport MUST include an `active_keys` array:
 
 ---
 
-## 19.9 Security Considerations
+## 19.9 Identity Attestations
 
-### 19.9.1 Chain Forgery
+### 19.9.1 Overview
+
+An agent MAY present cryptographic proof of real-world identity without
+revealing the underlying identity data. Identity attestations enable
+platforms to distinguish unique humans (or organizations) behind agents,
+strengthening anti-sybil measures (§21) while preserving privacy.
+
+### 19.9.2 Attestation Object
+
+The Agent Passport MAY include an `identity_attestations` array. Each
+element MUST conform to the following structure:
+
+```json
+{
+  "identity_attestations": [
+    {
+      "provider": "self.xyz",
+      "method": "zk-passport-nfc",
+      "level": "hardware",
+      "proof_hash": "0x...",
+      "verified_at": "2026-02-16T00:00:00Z",
+      "expires_at": "2027-02-16T00:00:00Z"
+    }
+  ]
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `provider` | string | MUST | Identifier of the attestation provider (e.g., a domain name). Provider names are informational; verification relies on `proof_hash`. |
+| `method` | string | MUST | The verification method used (e.g., `"zk-passport-nfc"`, `"social-graph"`, `"iris-scan"`). |
+| `level` | enum | MUST | One of the attestation levels defined in §19.9.3. |
+| `proof_hash` | string | MUST | Content-addressed hash of the zero-knowledge proof or verification artifact. Platforms MUST NOT store raw identity data — only this hash. |
+| `verified_at` | string | MUST | ISO 8601 timestamp of when the attestation was verified. |
+| `expires_at` | string | MUST | ISO 8601 timestamp of when the attestation expires. Expired attestations MUST NOT contribute to reputation weighting. |
+
+### 19.9.3 Attestation Levels
+
+Attestation levels are ordered from weakest to strongest assurance of
+unique personhood. Higher levels provide greater confidence that the
+agent is backed by a distinct real-world entity.
+
+| Level | Numeric Weight | Description | Examples (informational) |
+|-------|---------------|-------------|--------------------------|
+| `social` | 1 | Social graph proof — verification through a web-of-trust or social vouching mechanism. | Gitcoin Passport, BrightID |
+| `email` | 2 | Verified email domain — proof of control over an email address at a verified domain. | Corporate email verification |
+| `document` | 3 | KYC document review — identity document reviewed by a licensed verification provider. | Government ID review |
+| `biometric` | 4 | Biometric scan — iris, face, or voice biometric uniqueness proof. | Worldcoin iris scan |
+| `hardware` | 5 | Physical document NFC + ZK proof — cryptographic proof derived from NFC-readable identity documents (e.g., ePassport chip) combined with zero-knowledge proofs. | Self.xyz passport attestation |
+
+### 19.9.4 Stacking
+
+Multiple attestations from different levels MUST stack additively for
+reputation weighting purposes (§21). An agent holding both a `hardware`
+and a `social` attestation MUST receive a higher reputation weight than
+an agent holding only a `hardware` attestation.
+
+The effective attestation multiplier `M` is computed as:
+
+```
+M = base_multiplier(max_level) + 0.05 × (count_of_additional_levels)
+```
+
+Where `base_multiplier` is defined in §21.4.2.
+
+### 19.9.5 Expiry and Renewal
+
+- Attestations MUST include an expiration timestamp (`expires_at`).
+- Expired attestations MUST be excluded from reputation weight computation.
+- Agents SHOULD renew attestations before expiry to avoid reputation weight
+  reduction.
+- Platforms SHOULD notify agents at least 30 days before attestation expiry.
+- Renewed attestations MUST generate a new `proof_hash`; reuse of expired
+  proof hashes MUST be rejected.
+
+### 19.9.6 Privacy Requirements
+
+- Platforms MUST NOT store, transmit, or log raw identity data (passport
+  numbers, biometric templates, government IDs, etc.).
+- Only the `proof_hash` — a content-addressed hash of the zero-knowledge
+  proof — SHALL be stored in the Agent Passport.
+- Attestation providers MUST support zero-knowledge proof generation such
+  that the verifier learns only that the identity claim is valid, not the
+  underlying data.
+- The `provider` and `method` fields are metadata for human readability;
+  cryptographic verification MUST rely solely on `proof_hash` resolution.
+
+### 19.9.7 Provider Neutrality
+
+The identity attestation framework is vendor-neutral. Any provider that
+can produce a cryptographic proof conforming to this specification MAY
+be used. Provider names in this document (e.g., Self.xyz, Worldcoin,
+Gitcoin Passport, BrightID) are EXAMPLES only and do not constitute
+endorsement.
+
+Platforms MUST NOT restrict attestation providers to a closed list.
+Platforms MAY maintain a registry of recognized providers with associated
+trust levels, governed through `BenchmarkGovernance.sol` (§14).
+
+### 19.9.8 Validation
+
+Verifiers MUST perform the following checks on each identity attestation:
+
+1. `level` is one of the defined enum values (§19.9.3).
+2. `expires_at` is in the future.
+3. `proof_hash` resolves to a valid proof artifact.
+4. The proof artifact cryptographically validates the claimed `level` and `method`.
+5. The `verified_at` timestamp is not in the future.
+
+Attestations failing any check MUST be excluded from reputation computation.
+
+### 19.9.9 Schema
+
+The JSON Schema for the `identity_attestations` array is defined in
+`identity-attestation.schema.json` (normative).
+
+---
+
+## 19.10 Security Considerations
+
+### 19.10.1 Chain Forgery
 
 An attacker who compromises a single key in the chain cannot forge the full
 chain without also compromising the genesis key or all intermediate keys.
 Verifiers MUST validate every link.
 
-### 19.9.2 Recovery Abuse
+### 19.10.2 Recovery Abuse
 
 The Recovery Flow requires both owner verification AND platform attestation
 to prevent a single compromised party from hijacking identity. The cooldown
 period provides a window for legitimate owners to detect and contest
 fraudulent recovery.
 
-### 19.9.3 Key Reuse
+### 19.10.3 Key Reuse
 
 A DID that has been rotated away from MUST NOT be reused as a `new_did` in
 any subsequent rotation. Implementations MUST reject circular chains.
 
-### 19.9.4 Backup Key Compromise
+### 19.10.4 Backup Key Compromise
 
 If a `backup` key is compromised, it MUST be immediately removed from
 `active_keys` via a new passport version. If both primary and backup keys
@@ -410,9 +530,9 @@ are compromised, the Recovery Flow (§19.5) MUST be used.
 
 ---
 
-## 19.10 Examples
+## 19.11 Examples
 
-### 19.10.1 Simple Key Rotation
+### 19.11.1 Simple Key Rotation
 
 ```
 Genesis:  did:key:z6MkA... (previous_did: null, chain_position: 1)
@@ -422,7 +542,7 @@ Genesis:  did:key:z6MkA... (previous_did: null, chain_position: 1)
 Current:  did:key:z6MkB... (previous_did: did:key:z6MkA..., chain_position: 2)
 ```
 
-### 19.10.2 Upgrade With Rotation
+### 19.11.2 Upgrade With Rotation
 
 ```
 v1.0:  did:key:z6MkA... (model: gpt-4, snapshot.version: 1)
@@ -434,7 +554,7 @@ v2.0:  did:key:z6MkB... (model: gpt-5, snapshot.version: 2)
 
 Reputation from v1.0 carries to v2.0 via the Identity Continuity Chain.
 
-### 19.10.3 Compromise Recovery
+### 19.11.3 Compromise Recovery
 
 ```
 Active:    did:key:z6MkA... (COMPROMISED)

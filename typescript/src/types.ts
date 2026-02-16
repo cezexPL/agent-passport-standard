@@ -1,5 +1,13 @@
 // All TypeScript interfaces/types for the Agent Passport Standard v0.1
 
+// v1.1 re-exports (§17-§21)
+export type { MCPSecurityProfile, ToolAllowEntry, EgressPolicy, AuditEntry, MCPProfileOptions } from './mcp.js';
+export type { Provenance, ProvenanceOptions } from './provenance.js';
+export type { KeyRotation, IdentityChain } from './rotation.js';
+export type { ExecutionAttestation, ExecutionAttestationOptions } from './execution.js';
+export { TrustLevel } from './execution.js';
+export type { ReputationScore, ReputationAttestation } from './sybil.js';
+
 export interface SigningKey {
   algorithm: string;
   public_key: string;

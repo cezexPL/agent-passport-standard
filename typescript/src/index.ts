@@ -12,3 +12,15 @@ export { ReputationSummary } from './reputation.js';
 export type { ReputationSummaryData } from './reputation.js';
 export { resolveDIDKey, resolveDIDWeb, resolve as resolveDID, extractPublicKey } from './did.js';
 export type { DIDDocument, VerificationMethod } from './did.js';
+
+// v1.1 modules (§17-§21)
+export { createMCPProfile, validateMCPProfile } from './mcp.js';
+export type { MCPSecurityProfile, ToolAllowEntry, EgressPolicy, AuditEntry } from './mcp.js';
+export { createProvenance, validateHashFormat } from './provenance.js';
+export type { Provenance } from './provenance.js';
+export { createRotation } from './rotation.js';
+export type { KeyRotation, IdentityChain } from './rotation.js';
+export { createExecutionAttestation, TrustLevel } from './execution.js';
+export type { ExecutionAttestation } from './execution.js';
+export { computeReputation, computeDecay } from './sybil.js';
+export type { ReputationScore, ReputationAttestation } from './sybil.js';

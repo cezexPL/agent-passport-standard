@@ -1,0 +1,102 @@
+{
+  "profile_version": "1.0.0",
+  "mcp_tools_allowed": [
+    {
+      "server_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tool_name": "query",
+      "version": "2.1.0",
+      "data_classification_max": "confidential",
+      "description": "Execute read-only SQL queries against the analytics database",
+      "input_schema": {
+        "type": "object",
+        "required": ["sql"],
+        "properties": {
+          "sql": { "type": "string", "maxLength": 4096 }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "required": ["rows"],
+        "properties": {
+          "rows": { "type": "array" },
+          "row_count": { "type": "integer" }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "server_hash": "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592",
+      "tool_name": "get_issues",
+      "version": ">=1.0.0 <2.0.0",
+      "data_classification_max": "internal",
+      "description": "Fetch GitHub issues from authorized repositories"
+    },
+    {
+      "server_hash": "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592",
+      "tool_name": "create_comment",
+      "version": ">=1.0.0 <2.0.0",
+      "data_classification_max": "internal",
+      "description": "Post comments on GitHub issues"
+    }
+  ],
+  "egress_policy": {
+    "default": "deny",
+    "allow": [
+      {
+        "host": "api.github.com",
+        "ports": [443],
+        "protocol": "tcp",
+        "restricted_allowed": false,
+        "justification": "GitHub API access for issue management"
+      },
+      {
+        "host": "analytics-db.internal.example.com",
+        "ports": [5432],
+        "protocol": "tcp",
+        "restricted_allowed": false,
+        "justification": "PostgreSQL analytics database — read-only"
+      }
+    ]
+  },
+  "data_classification_default": "restricted",
+  "server_attestations": [
+    {
+      "binary_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "config_hash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+      "version": "2.1.0",
+      "tls_fingerprint": "4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce",
+      "attestation_signature": "BASE64_ED25519_SIGNATURE_HERE",
+      "operator_did": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+    }
+  ],
+  "io_validation": {
+    "max_input_bytes": 524288,
+    "max_output_bytes": 5242880,
+    "max_batch_bytes": 52428800,
+    "max_nesting_depth": 16,
+    "injection_detection": {
+      "prompt_injection": true,
+      "command_injection": true,
+      "serialization_attacks": true
+    }
+  },
+  "exfiltration_guards": {
+    "max_egress_bytes_per_hour": 5242880,
+    "max_egress_bytes_per_day": 52428800,
+    "max_unique_domains_per_hour": 3,
+    "max_tool_calls_per_minute": 30,
+    "response_action": "terminate",
+    "pattern_detection": [
+      "encoding_escalation",
+      "chunked_exfiltration",
+      "classification_escalation",
+      "temporal_anomaly"
+    ]
+  },
+  "audit": {
+    "retention_days": 365,
+    "retention_days_sensitive": 730,
+    "anchor_to_ledger": true
+  }
+}

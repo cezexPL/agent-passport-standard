@@ -56,7 +56,42 @@ Each issuer MUST be assigned a weight `w` from the following tiers:
 | 4 | `audited-platform` | Platform that has passed an independent security/governance audit. |
 | 5 | `consortium` | Multi-party governance body or DAO recognized by BenchmarkGovernance.sol. |
 
-### 21.4.1 Tier Assignment
+### 21.4.1 Identity Attestation Multiplier
+
+In addition to the issuer tier weight, the **agent being rated** receives
+a reputation multiplier based on its identity attestation level (§19.9).
+This multiplier adjusts the effective reputation score to reward agents
+that have demonstrated real-world identity assurance.
+
+The attestation multiplier `A` MUST be applied to the final score:
+
+```
+R_effective = A × R
+```
+
+Where `A` is determined by the agent's highest-level valid (non-expired)
+identity attestation:
+
+| Highest Attestation Level | Base Multiplier `A` |
+|---------------------------|---------------------|
+| `hardware` | 1.5 |
+| `biometric` | 1.3 |
+| `document` | 1.1 |
+| `email` | 1.0 |
+| `social` | 0.8 |
+| None (no attestation) | 0.5 |
+
+**Stacking bonus:** For each additional attestation level (distinct from
+the highest) that the agent holds, the multiplier increases by `0.05`.
+For example, an agent with `hardware` + `social` attestations receives
+`A = 1.5 + 0.05 = 1.55`.
+
+The effective score `R_effective` MUST be clamped to `[0.0, 1.0]`.
+
+Attestation validity MUST be checked at score computation time: only
+attestations where `expires_at` is in the future SHALL be considered.
+
+### 21.4.2 Tier Assignment
 
 - Tier assignment MUST be governed by on-chain registry managed through `BenchmarkGovernance.sol` (see APS §14).
 - Tier upgrades REQUIRE a governance proposal with majority approval.

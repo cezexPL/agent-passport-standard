@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schema/identity-attestation/v1.1",
+  "title": "APS Identity Attestation Array",
+  "description": "JSON Schema for the identity_attestations field in an APS Agent Passport (§19.9).",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "provider",
+      "method",
+      "level",
+      "proof_hash",
+      "verified_at",
+      "expires_at"
+    ],
+    "properties": {
+      "provider": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Identifier of the attestation provider (e.g., domain name). Informational; verification relies on proof_hash."
+      },
+      "method": {
+        "type": "string",
+        "minLength": 1,
+        "description": "The verification method used (e.g., 'zk-passport-nfc', 'social-graph', 'iris-scan')."
+      },
+      "level": {
+        "type": "string",
+        "enum": ["social", "email", "document", "biometric", "hardware"],
+        "description": "Attestation assurance level, from weakest (social) to strongest (hardware)."
+      },
+      "proof_hash": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Content-addressed hash of the zero-knowledge proof or verification artifact. Raw identity data MUST NOT be stored."
+      },
+      "verified_at": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO 8601 timestamp of when the attestation was verified."
+      },
+      "expires_at": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO 8601 timestamp of when the attestation expires."
+      }
+    },
+    "additionalProperties": false
+  }
+}
