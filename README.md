@@ -105,12 +105,46 @@ cd go && go build ./cmd/passport-cli
 
 ### Cross-Platform Portability
 
+Agents can export their identity, work history, and reputation as a signed bundle — and import it on any other APS-compatible platform:
+
 ```bash
 # Inspect a bundle exported from another platform
 ./passport-cli bundle inspect examples/example-bundle.json
 
-# Verify a bundle from another platform
+# Verify a bundle (checks bundle signature + passport integrity)
 ./passport-cli bundle verify examples/example-bundle.json
+```
+
+```go
+// Export: create a portable bundle with reputation
+bundle := bundle.NewBundle(passport,
+    bundle.WithReceipts(workReceipts),
+    bundle.WithAttestations(attestations),
+    bundle.WithReputation(reputationSummary),
+    bundle.WithPlatformDID("did:web:clawbotden.com"),
+)
+bundle.Sign(platformPrivateKey)
+data, _ := bundle.JSON()
+
+// Import: verify and accept an agent from another platform
+imported, _ := bundle.FromJSON(data)
+report, _ := imported.VerifyAll(senderPublicKey)
+// report.BundleValid, report.PassportValid, report.ReceiptsValid...
+```
+
+**DID Resolution** — resolve agent identity across platforms:
+
+```go
+resolver := did.DefaultResolver() // did:key + did:web
+doc, _ := resolver.Resolve("did:web:clawbotden.com:bots:TARS-001")
+pubKey, _ := did.ExtractPublicKey(doc)
+```
+
+**Platform Discovery** — any APS platform publishes:
+```
+GET /.well-known/agent-passport-standard → federation endpoints
+GET /.well-known/did.json               → platform DID document
+GET /bots/{name}/did.json               → per-agent DID document
 ```
 
 ### Install the SDK
@@ -227,7 +261,7 @@ cd typescript && npx vitest run
 ```
 agent-passport-standard/
 ├── spec/                          # Specification & schemas
-│   ├── SPECIFICATION.md           # Full spec (v0.2)
+│   ├── SPECIFICATION.md           # Full spec (v0.3) — 16 sections incl. Federation Protocol
 │   ├── CHANGELOG.md               # Version history
 │   ├── agent-passport.schema.json # Passport JSON Schema
 │   ├── work-receipt.schema.json   # Work Receipt JSON Schema
@@ -235,23 +269,29 @@ agent-passport-standard/
 │   ├── dna.schema.json            # Agent DNA JSON Schema
 │   ├── memory-vault.schema.json   # Memory Vault JSON Schema
 │   ├── anchoring.schema.json      # Anchoring receipt schema
+│   ├── bundle.schema.json         # Cross-platform export bundle schema
+│   ├── reputation-summary.schema.json # Portable reputation schema
+│   ├── federation-discovery.schema.json # Platform discovery schema
 │   └── test-vectors.json          # Conformance test vectors
 ├── go/                            # Go SDK (github.com/cezexPL/agent-passport-standard/go)
 │   ├── passport/                  # Passport create/verify
 │   ├── receipt/                   # Work Receipt handling
 │   ├── envelope/                  # Security Envelope validation
+│   ├── bundle/                    # Cross-platform export/import bundles
+│   ├── did/                       # DID resolution (did:key, did:web, multi-resolver)
+│   ├── attestation/               # W3C VC attestations, persistent registry, revocation
 │   ├── crypto/                    # Ed25519, keccak-256, Merkle, canonical JSON
 │   ├── anchor/                    # Ethereum + Arweave + NoOp providers
 │   ├── compat/                    # Agent Skills format converter
 │   ├── conformance/               # Conformance suite runner
-│   ├── cmd/passport-cli/          # CLI validator tool
+│   ├── cmd/passport-cli/          # CLI validator tool (passport, receipt, envelope, bundle)
 │   └── API.md                     # Go API documentation
 ├── python/                        # Python SDK (aps-sdk on PyPI)
-│   ├── aps/                       # Core package
+│   ├── aps/                       # Core: passport, receipt, envelope, bundle, did, reputation
 │   ├── tests/                     # Test suite + benchmarks
 │   └── API.md                     # Python API documentation
 ├── typescript/                    # TypeScript SDK (aps-sdk on npm)
-│   ├── src/                       # Core source
+│   ├── src/                       # Core: passport, receipt, envelope, bundle, did, reputation
 │   ├── tests/                     # Test suite + benchmarks
 │   └── API.md                     # TypeScript API documentation
 ├── examples/                      # Example artifacts
@@ -259,11 +299,12 @@ agent-passport-standard/
 │   ├── example-receipt.json
 │   ├── example-envelope.json
 │   ├── example-dna.json
+│   ├── example-bundle.json        # Cross-platform export bundle example
 │   ├── example-recovery.json
 │   ├── mcp-integration/           # MCP interop example
 │   └── a2a-exchange/              # A2A interop example
 ├── CONTRIBUTING.md
-└── LICENSE                        # CC BY 4.0 (spec) + MIT (code)
+└── LICENSE                        # Apache 2.0
 ```
 
 ---
