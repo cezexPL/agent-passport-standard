@@ -1,393 +1,743 @@
-# §22 Merkle Proofs & On-Chain Anchoring
+# §22 Merkle Proofs & Advanced On-Chain Anchoring
 
-**Status:** Normative  
-**Version:** 1.1.0  
-**Authors:** Cezary Grotowski  
+**APS v1.1 Extension**  
+**Status:** Draft  
+**Date:** 2026-02-16  
+**Author:** Cezary Grotowski <c.grotowski@gmail.com>  
+**Extends:** §4 (Anchoring Providers), §6.3 (Merkle Trees), §14 (Trust Levels)
 
-## 22.1 Abstract
+---
 
-This section formalizes the Merkle tree construction, batch anchoring protocol, and multi-chain verification procedures for the Agent Passport Standard. Anchoring provides tamper-evident, timestamped proof-of-existence for agent work receipts, passport snapshots, and attestations.
+## 22.1 Introduction
 
-## 22.2 Terminology
+This section formalizes the Merkle tree construction algorithm, defines a
+multi-chain batch anchoring protocol, and specifies cross-chain verification
+procedures for the Agent Passport Standard. It supersedes the informational
+guidance in §6.3 and elevates domain-separated Merkle trees from RECOMMENDED
+to REQUIRED for all new implementations (v1.1+).
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
+"SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be
+interpreted as described in [RFC 2119].
 
-| Term | Definition |
-|------|-----------|
-| **Anchor** | A transaction on a blockchain that commits a Merkle root hash. |
-| **Batch** | A set of items (receipts, snapshots, attestations) grouped for a single anchor. |
-| **Leaf** | A hash of an individual item in the batch. |
-| **Merkle Root** | The top hash of a binary Merkle tree constructed from batch leaves. |
-| **Merkle Proof** | The set of sibling hashes required to recompute the root from a leaf. |
-| **Anchoring Receipt** | A signed document proving a Merkle root was anchored on-chain. |
+---
 
-## 22.3 Merkle Tree Construction
+## 22.2 Merkle Tree Construction
 
-### 22.3.1 Hash Function
+### 22.2.1 Domain Separation
 
-Implementations MUST use **Keccak-256** (as used by Ethereum) for all Merkle tree computations.
-
-### 22.3.2 Domain Separation
-
-To prevent second-preimage attacks, implementations SHOULD apply domain separation prefixes:
-
-- **Leaf node:** `H(0x00 || data)`
-- **Internal node:** `H(0x01 || left || right)`
-
-where `H` is Keccak-256, `||` denotes concatenation, and `0x00`/`0x01` are single-byte prefixes.
-
-> **Backward Compatibility (v1.0.x):** Implementations MUST accept proofs constructed without domain separation (plain `H(data)` for leaves and `H(left || right)` for internal nodes) to maintain compatibility with v1.0.x producers. Implementations SHOULD produce domain-separated proofs in v1.1+.
-
-### 22.3.3 Leaf Ordering
-
-Before tree construction, leaves MUST be sorted lexicographically by their hex-encoded hash values. This ensures deterministic tree construction regardless of insertion order.
+All v1.1 implementations MUST use domain-separated hashing to prevent
+second-preimage attacks between leaf and internal nodes.
 
 ```
-leaves = sort([keccak256(0x00 || item_bytes) for item in batch])
+LEAF_PREFIX  = 0x00   (1 byte)
+NODE_PREFIX  = 0x01   (1 byte)
 ```
 
-### 22.3.4 Pair Sorting
+### 22.2.2 Hash Functions
 
-For internal nodes, the two child hashes MUST be sorted before hashing:
+The hash function H is Keccak-256 as specified in [FIPS 202] (NOT SHA-3;
+Keccak-256 uses different padding). All hash values are 32 bytes.
 
-```
-if left > right:
-    left, right = right, left
-internal = keccak256(0x01 || left || right)
-```
+### 22.2.3 Leaf Computation
 
-### 22.3.5 Odd Leaves
-
-If the number of leaves at any level is odd, the last leaf MUST be duplicated to form a complete pair.
-
-### 22.3.6 Empty Tree
-
-A tree with zero leaves has root `0x0000000000000000000000000000000000000000000000000000000000000000` (32 zero bytes). A tree with one leaf has root equal to that leaf's hash.
-
-### 22.3.7 Construction Algorithm
+Given a receipt hash `r` (32 bytes, the Keccak-256 of the JCS-canonicalized
+receipt):
 
 ```
-function buildMerkleTree(items: bytes[]) -> bytes32:
-    if len(items) == 0:
-        return ZERO_HASH
-    
-    // Step 1: Hash leaves with domain separation
-    leaves = []
-    for item in items:
-        leaves.append(keccak256(0x00 || item))
-    
-    // Step 2: Sort leaves
+leaf = H(0x00 || r)
+```
+
+Where `||` denotes byte concatenation.
+
+**Example:**
+
+```
+r    = 0xa1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2
+leaf = keccak256(0x00a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2)
+     = 0x7f3e8a...  (32 bytes)
+```
+
+### 22.2.4 Internal Node Computation
+
+Given two child hashes `a` and `b` (each 32 bytes):
+
+```
+node = H(0x01 || min(a, b) || max(a, b))
+```
+
+Where `min` and `max` are lexicographic comparison of the 32-byte values.
+Sorted-pair concatenation ensures that the tree is order-independent: the same
+set of leaves always produces the same root regardless of insertion order.
+
+**Example:**
+
+```
+a    = 0x1111111111111111111111111111111111111111111111111111111111111111
+b    = 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+node = keccak256(0x01 || a || b)   // a < b lexicographically
+     = keccak256(0x011111...1111aaaa...aaaa)
+```
+
+### 22.2.5 Tree Construction Algorithm
+
+```
+function buildMerkleTree(receipt_hashes: bytes32[]) -> bytes32:
+    REQUIRE len(receipt_hashes) >= 1
+
+    // Step 1: Compute leaves with domain separation
+    leaves = [H(0x00 || r) for r in receipt_hashes]
+
+    // Step 2: Sort leaves lexicographically
     sort(leaves)
-    
-    // Step 3: Build tree bottom-up
+
+    // Step 3: Iteratively combine pairs
     level = leaves
     while len(level) > 1:
         next_level = []
         for i in range(0, len(level), 2):
-            left = level[i]
-            right = level[i+1] if i+1 < len(level) else level[i]
-            // Sort pair
-            if left > right:
-                left, right = right, left
-            next_level.append(keccak256(0x01 || left || right))
+            if i + 1 < len(level):
+                a = level[i]
+                b = level[i + 1]
+                next_level.append(H(0x01 || min(a, b) || max(a, b)))
+            else:
+                // Odd element: promote to next level unchanged
+                next_level.append(level[i])
         level = next_level
-    
-    return level[0]
+
+    return level[0]  // Merkle root
 ```
 
-## 22.4 Batch Anchoring Protocol
+**Properties:**
+- Deterministic: same set of receipt hashes → same root.
+- Proof size: O(log₂ N) hashes for N leaves.
+- Domain separation prevents leaf/node confusion attacks per [RFC 6962 §2.1].
 
-### 22.4.1 Batch Formation
+### 22.2.6 Proof Generation
 
-A platform SHOULD batch items for anchoring to amortize gas costs:
+A Merkle proof for receipt hash `r` consists of an ordered array of
+`(sibling_hash, position)` pairs from leaf to root:
 
-1. Collect items (work receipts, snapshots, attestations) over a configurable period
-2. Minimum batch size: **1** (single-item batches are valid)
-3. Maximum batch size: **RECOMMENDED 1024** items
-4. Maximum batch interval: platform-configurable, **RECOMMENDED 1 hour**
-5. Items MUST be serialized using JCS (JSON Canonicalization Scheme, RFC 8785) before hashing
-
-### 22.4.2 Anchoring Flow
-
-```
-1. Platform collects N items during batch window
-2. Platform serializes each item to canonical JSON (JCS)
-3. Platform computes Merkle tree → root_hash
-4. Platform submits anchor transaction:
-   anchorBatch(batch_id, root_hash, item_count)
-5. Platform waits for transaction confirmation (≥1 block)
-6. Platform creates AnchoringReceipt with tx details
-7. Platform distributes Merkle proofs to item owners
-```
-
-### 22.4.3 Anchor Transaction
-
-The on-chain anchor MUST include at minimum:
-- `batch_id`: unique identifier (UUID or incrementing counter)
-- `merkle_root`: 32-byte Keccak-256 root hash
-- `item_count`: number of items in the batch
-
-RECOMMENDED additional fields:
-- `anchor_timestamp`: block timestamp of anchor
-- `schema_version`: APS version used (e.g., "1.1.0")
-
-### 22.4.4 Smart Contract Interface
-
-```solidity
-interface IAnchoringRegistry {
-    event BatchAnchored(
-        bytes32 indexed batchId,
-        bytes32 merkleRoot,
-        uint256 itemCount,
-        uint256 timestamp
-    );
-
-    function anchorBatch(
-        bytes32 batchId,
-        bytes32 merkleRoot,
-        uint256 itemCount
-    ) external;
-
-    function verifyAnchor(
-        bytes32 batchId
-    ) external view returns (
-        bytes32 merkleRoot,
-        uint256 itemCount,
-        uint256 timestamp,
-        address anchorer
-    );
+```json
+{
+  "receipt_hash": "0xa1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+  "leaf_index": 3,
+  "proof": [
+    { "hash": "0x4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f", "position": "left" },
+    { "hash": "0x8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c", "position": "right" },
+    { "hash": "0xf1e2d3c4b5a69788796a5b4c3d2e1f0fabcdef0123456789abcdef0123456789ab", "position": "left" }
+  ],
+  "root": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
 }
 ```
 
-## 22.5 Anchoring Receipt
+### 22.2.7 Proof Verification Algorithm
 
-After successful on-chain anchoring, the platform MUST produce an `AnchoringReceipt`:
+```
+function verifyProof(receipt_hash, proof, root) -> bool:
+    current = H(0x00 || receipt_hash)
+    for step in proof:
+        sibling = step.hash
+        current = H(0x01 || min(current, sibling) || max(current, sibling))
+    return current == root
+```
+
+Implementations MUST reject proofs where any hash is not exactly 32 bytes.
+
+---
+
+## 22.3 Batch Anchoring Protocol
+
+### 22.3.1 Overview
+
+Rather than anchoring each receipt individually (expensive), implementations
+SHOULD batch multiple receipts into a single Merkle tree and anchor only the
+root hash on-chain.
+
+### 22.3.2 Protocol Steps
+
+```
+┌─────────────┐     ┌──────────────┐     ┌───────────────┐     ┌──────────────┐
+│ 1. Collect   │────▶│ 2. Build     │────▶│ 3. Anchor     │────▶│ 4. Distribute│
+│ N receipts   │     │ Merkle tree  │     │ root on-chain │     │ proofs       │
+└─────────────┘     └──────────────┘     └───────────────┘     └──────────────┘
+```
+
+**Step 1 — Collection:**
+The anchoring service collects work receipts and passport snapshots during a
+batching window. Each item is JCS-canonicalized and hashed with Keccak-256.
+
+**Step 2 — Tree Construction:**
+Apply the algorithm in §22.2.5 to produce the batch Merkle root.
+
+**Step 3 — On-Chain Anchoring:**
+Submit `anchorBatchRoot(bytes32 root, uint256 batchSize)` to the
+AgentIdentityRegistry contract (see §22.4.4).
+
+**Step 4 — Proof Distribution:**
+For each receipt in the batch, generate the Merkle proof (§22.2.6) and package
+it with the AnchoringReceipt (§22.4) for the holder to store.
+
+### 22.3.3 Batching Window
+
+Implementations MUST define a batching policy. RECOMMENDED defaults:
+
+| Parameter             | Value       | Rationale                          |
+|-----------------------|-------------|------------------------------------|
+| `max_batch_size`      | 1024        | Proof depth ≤ 10 hashes           |
+| `min_batch_size`      | 1           | Don't delay single urgent anchors  |
+| `max_wait_seconds`    | 3600        | Anchor at least hourly             |
+| `trigger_threshold`   | 256         | Anchor when queue reaches 256      |
+
+The batch window closes when ANY trigger condition is met.
+
+---
+
+## 22.4 Anchoring Receipt
+
+### 22.4.1 Schema
+
+An AnchoringReceipt binds a batch Merkle root to a specific on-chain
+transaction across any supported chain.
 
 ```json
 {
   "type": "AnchoringReceipt",
-  "spec_version": "1.1.0",
-  "batch_id": "550e8400-e29b-41d4-a716-446655440000",
-  "merkle_root": "0x4a5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b",
-  "chain": {
-    "chain_id": 8453,
-    "chain_name": "Base",
-    "contract_address": "0x1234567890abcdef1234567890abcdef12345678",
-    "tx_hash": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-    "block_number": 12345678,
-    "block_timestamp": "2026-02-16T02:00:00Z"
+  "version": "1.1",
+  "batch_root": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+  "batch_size": 256,
+  "chain_id": "eip155:8453",
+  "tx_hash": "0x9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+  "block_number": 28451033,
+  "timestamp": "2026-02-16T01:30:00Z",
+  "contract_address": "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18",
+  "anchor_method": "anchorBatchRoot(bytes32,uint256)"
+}
+```
+
+### 22.4.2 Required Fields
+
+| Field              | Type    | Description                                              |
+|--------------------|---------|----------------------------------------------------------|
+| `type`             | string  | MUST be `"AnchoringReceipt"`.                            |
+| `version`          | string  | MUST be `"1.1"`.                                         |
+| `batch_root`       | Hex256  | Keccak-256 Merkle root of the batch.                     |
+| `batch_size`       | integer | Number of leaves in the batch. MUST be ≥ 1.              |
+| `chain_id`         | string  | CAIP-2 chain identifier (see §22.5).                     |
+| `tx_hash`          | string  | Transaction hash on the target chain.                    |
+| `block_number`     | integer | Block number containing the transaction. 0 if N/A.       |
+| `timestamp`        | string  | ISO 8601 UTC timestamp of the block.                     |
+| `contract_address` | string  | Address of the anchoring contract.                       |
+
+### 22.4.3 Optional Fields
+
+| Field              | Type    | Description                                              |
+|--------------------|---------|----------------------------------------------------------|
+| `anchor_method`    | string  | Contract method signature used.                          |
+| `gas_used`         | integer | Gas consumed by the transaction.                         |
+| `anchored_by`      | DID     | DID of the anchoring service operator.                   |
+| `co_anchors`       | array   | Additional chain anchors for the same batch root.        |
+
+### 22.4.4 Smart Contract Interface
+
+The `AgentIdentityRegistry` contract (or compatible) MUST implement:
+
+```solidity
+interface IAnchorRegistry {
+    event BatchAnchored(
+        bytes32 indexed batchRoot,
+        uint256 batchSize,
+        address indexed anchorer,
+        uint256 timestamp
+    );
+
+    /// @notice Anchor a Merkle root for a batch of receipts.
+    /// @param batchRoot The Merkle root of the receipt batch.
+    /// @param batchSize Number of receipts in the batch.
+    function anchorBatchRoot(bytes32 batchRoot, uint256 batchSize) external;
+
+    /// @notice Verify whether a batch root has been anchored.
+    /// @param batchRoot The Merkle root to verify.
+    /// @return anchored True if the root exists.
+    /// @return timestamp Block timestamp when anchored.
+    /// @return anchorer Address that submitted the root.
+    function verifyBatchRoot(bytes32 batchRoot)
+        external
+        view
+        returns (bool anchored, uint256 timestamp, address anchorer);
+}
+```
+
+Storage pattern:
+
+```solidity
+struct AnchorRecord {
+    uint256 timestamp;
+    uint256 batchSize;
+    address anchorer;
+}
+
+mapping(bytes32 => AnchorRecord) public anchors;
+```
+
+---
+
+## 22.5 Multi-Chain Support
+
+### 22.5.1 Chain Identifier Format
+
+All chain references MUST use [CAIP-2] identifiers:
+
+| Chain           | CAIP-2 Identifier     | Type         | Notes                          |
+|-----------------|-----------------------|--------------|--------------------------------|
+| Ethereum L1     | `eip155:1`            | EVM          | Highest finality, highest cost |
+| Base L2         | `eip155:8453`         | EVM (OP)     | RECOMMENDED default            |
+| Arbitrum One    | `eip155:42161`        | EVM (Nitro)  | Low cost, fast finality        |
+| Polygon PoS     | `eip155:137`          | EVM          | Low cost                       |
+| Sui             | `sui:mainnet`         | Move         | Object-based anchoring         |
+| Solana          | `solana:mainnet`      | SVM          | Program-based anchoring        |
+
+### 22.5.2 EVM Chains (Ethereum, Base, Arbitrum, Polygon)
+
+EVM chains share the same contract interface (§22.4.4). Implementations MUST
+deploy the same `IAnchorRegistry` interface on each supported chain.
+
+**Transaction encoding:**
+
+```
+anchorBatchRoot(bytes32,uint256)
+selector: keccak256("anchorBatchRoot(bytes32,uint256)")[:4]
+data:    selector || batchRoot (32 bytes) || batchSize (uint256, 32 bytes)
+```
+
+### 22.5.3 Sui
+
+On Sui, the anchoring module uses a shared object:
+
+```move
+module aps::anchor_registry {
+    use sui::object::{Self, UID};
+    use sui::table::{Self, Table};
+
+    struct AnchorRegistry has key {
+        id: UID,
+        anchors: Table<vector<u8>, AnchorRecord>,
+    }
+
+    struct AnchorRecord has store {
+        timestamp: u64,
+        batch_size: u64,
+        anchorer: address,
+    }
+
+    public entry fun anchor_batch_root(
+        registry: &mut AnchorRegistry,
+        batch_root: vector<u8>,
+        batch_size: u64,
+        ctx: &mut TxContext,
+    ) { /* ... */ }
+}
+```
+
+The `chain_id` in the AnchoringReceipt MUST be `"sui:mainnet"` (or
+`"sui:testnet"`). The `tx_hash` is the Sui transaction digest (base58).
+The `contract_address` is the Sui object ID of the `AnchorRegistry`.
+
+### 22.5.4 Solana
+
+On Solana, the anchoring program stores records in a PDA:
+
+```rust
+// Program instruction: AnchorBatchRoot { batch_root: [u8; 32], batch_size: u64 }
+// PDA seed: ["anchor", batch_root]
+```
+
+The `chain_id` MUST be `"solana:mainnet"` (or `"solana:devnet"`). The
+`tx_hash` is the Solana transaction signature (base58). The
+`contract_address` is the program ID.
+
+### 22.5.5 Chain-Agnostic Verification
+
+Verifiers MUST support resolving any CAIP-2 chain identifier. The verification
+algorithm is:
+
+```
+function verifyAnchoringReceipt(receipt: AnchoringReceipt) -> bool:
+    chain = resolveChain(receipt.chain_id)
+    provider = getProvider(chain)
+
+    // Verify on-chain
+    (anchored, timestamp, anchorer) = provider.verifyBatchRoot(
+        receipt.batch_root,
+        receipt.contract_address
+    )
+
+    REQUIRE anchored == true
+    REQUIRE abs(timestamp - parse(receipt.timestamp)) < 60  // 60s tolerance
+    return true
+```
+
+---
+
+## 22.6 Proof-of-Existence
+
+### 22.6.1 Definition
+
+A Proof-of-Existence (PoE) demonstrates that a specific receipt existed at or
+before time T. It consists of three components:
+
+1. **Receipt hash** — `keccak256(JCS(receipt))`
+2. **Merkle proof** — path from leaf to batch root (§22.2.6)
+3. **Anchoring receipt** — binding the batch root to a blockchain timestamp (§22.4)
+
+### 22.6.2 Composite Proof Structure
+
+```json
+{
+  "type": "ProofOfExistence",
+  "version": "1.1",
+  "receipt_hash": "0xa1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+  "receipt_type": "WorkReceipt",
+  "merkle_proof": {
+    "leaf_index": 42,
+    "proof": [
+      { "hash": "0x4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f", "position": "left" },
+      { "hash": "0x8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c", "position": "right" },
+      { "hash": "0xf1e2d3c4b5a69788796a5b4c3d2e1f0fabcdef0123456789abcdef0123456789ab", "position": "left" }
+    ],
+    "root": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
   },
-  "item_count": 42,
-  "created": "2026-02-16T02:00:05Z",
-  "proof": {
-    "type": "Ed25519Signature2020",
-    "created": "2026-02-16T02:00:05Z",
-    "verificationMethod": "did:web:clawbotden.com#anchor-key-1",
-    "proofPurpose": "assertionMethod",
-    "proofValue": "a1b2c3d4..."
+  "anchoring_receipt": {
+    "type": "AnchoringReceipt",
+    "version": "1.1",
+    "batch_root": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+    "batch_size": 256,
+    "chain_id": "eip155:8453",
+    "tx_hash": "0x9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+    "block_number": 28451033,
+    "timestamp": "2026-02-16T01:30:00Z",
+    "contract_address": "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18"
+  },
+  "existence_time": "2026-02-16T01:30:00Z"
+}
+```
+
+### 22.6.3 Verification Algorithm
+
+```
+function verifyProofOfExistence(poe: ProofOfExistence) -> (bool, timestamp):
+    // Step 1: Verify Merkle proof
+    REQUIRE verifyProof(
+        poe.receipt_hash,
+        poe.merkle_proof.proof,
+        poe.merkle_proof.root
+    )
+
+    // Step 2: Verify root matches anchoring receipt
+    REQUIRE poe.merkle_proof.root == poe.anchoring_receipt.batch_root
+
+    // Step 3: Verify on-chain anchoring
+    REQUIRE verifyAnchoringReceipt(poe.anchoring_receipt)
+
+    // Step 4: Return the blockchain-attested timestamp
+    return (true, poe.anchoring_receipt.timestamp)
+```
+
+Verifiers MUST treat the `block_number` timestamp from the chain as the
+authoritative existence time, NOT the `timestamp` field in the receipt
+(which is informational).
+
+---
+
+## 22.7 Cross-Chain Verification
+
+### 22.7.1 Problem Statement
+
+An agent operating on chain B receives a ProofOfExistence anchored on chain A.
+The verifier must confirm the anchoring without direct access to chain A.
+
+### 22.7.2 Verification Strategies
+
+Implementations MUST support at least one of the following strategies:
+
+**Strategy 1: Direct RPC Verification (RECOMMENDED)**
+
+The verifier queries chain A's RPC endpoint to call `verifyBatchRoot()`:
+
+```
+function crossChainVerify(poe: ProofOfExistence, rpc_endpoints: Map) -> bool:
+    chain_id = poe.anchoring_receipt.chain_id
+    rpc = rpc_endpoints[chain_id]
+    REQUIRE rpc != null
+
+    result = rpc.call(
+        to: poe.anchoring_receipt.contract_address,
+        data: encodeCall("verifyBatchRoot", poe.anchoring_receipt.batch_root)
+    )
+    return result.anchored == true
+```
+
+**Strategy 2: Light Client / Header Proof**
+
+For trustless verification, include a block header proof:
+
+```json
+{
+  "cross_chain_proof": {
+    "strategy": "header_proof",
+    "source_chain": "eip155:1",
+    "block_header": "0x...",
+    "state_proof": ["0x...", "0x..."],
+    "storage_slot": "0x..."
   }
 }
 ```
 
-## 22.6 Merkle Proof Format
+**Strategy 3: Bridge Relay**
 
-A Merkle proof for an individual item MUST include:
+Use a cross-chain messaging bridge (e.g., LayerZero, Hyperlane) to relay
+the verification result. The relay message MUST include the batch root and
+the source chain's block timestamp.
 
-```json
-{
-  "type": "MerkleProof",
-  "item_hash": "0x1234...",
-  "merkle_root": "0x4a5c...",
-  "proof_path": [
-    {"position": "left", "hash": "0xaaaa..."},
-    {"position": "right", "hash": "0xbbbb..."},
-    {"position": "left", "hash": "0xcccc..."}
-  ],
-  "leaf_index": 7,
-  "tree_size": 42,
-  "domain_separated": true,
-  "anchoring_receipt_id": "550e8400-e29b-41d4-a716-446655440000"
-}
+### 22.7.3 Trust Model
+
+| Strategy      | Trust Assumptions                      | Latency    |
+|---------------|----------------------------------------|------------|
+| Direct RPC    | Trust RPC provider                     | Seconds    |
+| Header Proof  | Trust chain consensus only (trustless) | Minutes    |
+| Bridge Relay  | Trust bridge validators                | Minutes    |
+
+Implementations SHOULD document which strategy they use. For Trust Level 3
+(Full), at least two independent verification paths are RECOMMENDED.
+
+---
+
+## 22.8 Cost Optimization
+
+### 22.8.1 Gas Estimates
+
+Anchoring a single `bytes32` root costs approximately:
+
+| Chain          | Gas (approx)    | Cost (USD, est.) | Finality     |
+|----------------|-----------------|-------------------|--------------|
+| Ethereum L1    | 45,000 gas      | $2.00 – $15.00   | ~12 min      |
+| Base L2        | 45,000 L2 gas   | $0.001 – $0.01   | ~2 sec + L1  |
+| Arbitrum One   | 45,000 L2 gas   | $0.001 – $0.02   | ~1 sec + L1  |
+| Polygon PoS    | 45,000 gas      | $0.005 – $0.05   | ~2 sec       |
+| Sui            | ~1,000 gas      | $0.001 – $0.005  | ~2 sec       |
+| Solana         | ~5,000 CU       | $0.0001 – $0.001 | ~400 ms      |
+
+### 22.8.2 Batch Size Tradeoffs
+
+```
+Cost per receipt = (anchor_tx_cost) / batch_size
+
+Example (Base L2, $0.005/tx):
+  Batch size 1:    $0.005 / receipt
+  Batch size 256:  $0.00002 / receipt
+  Batch size 1024: $0.000005 / receipt
 ```
 
-### 22.6.1 Proof Verification Algorithm
+Larger batches reduce per-receipt cost but increase latency (longer batching
+windows). Implementations SHOULD target 256–1024 receipts per batch.
 
-```
-function verifyMerkleProof(proof: MerkleProof) -> bool:
-    current = proof.item_hash
-    
-    for step in proof.proof_path:
-        if proof.domain_separated:
-            if step.position == "left":
-                left, right = step.hash, current
-            else:
-                left, right = current, step.hash
-            // Sort pair for determinism
-            if left > right:
-                left, right = right, left
-            current = keccak256(0x01 || left || right)
-        else:
-            // v1.0.x backward compat (no domain separation)
-            if step.position == "left":
-                current = keccak256(step.hash || current)
-            else:
-                current = keccak256(current || step.hash)
-    
-    return current == proof.merkle_root
-```
+### 22.8.3 L2 vs L1 Strategy
 
-## 22.7 Multi-Chain Support
+RECOMMENDED tiered approach:
 
-### 22.7.1 Supported Chains
-
-APS anchoring is chain-agnostic. The following chains are RECOMMENDED:
-
-| Chain | Chain ID | Type | Cost (approx.) | Finality | Use Case |
-|-------|----------|------|-----------------|----------|----------|
-| **Ethereum L1** | 1 | L1 | ~$5-50/tx | ~15 min | High-value, permanent anchors |
-| **Base** | 8453 | L2 (OP Stack) | ~$0.01-0.10/tx | ~2 sec | **RECOMMENDED default** |
-| **Arbitrum One** | 42161 | L2 (Rollup) | ~$0.01-0.10/tx | ~1 sec | Alternative L2 |
-| **Polygon PoS** | 137 | Sidechain | ~$0.001/tx | ~2 sec | Low-cost, high-volume |
-| **Solana** | — | L1 | ~$0.001/tx | ~0.4 sec | Non-EVM alternative |
-| **Sui** | — | L1 | ~$0.001/tx | ~0.5 sec | Non-EVM alternative |
-
-### 22.7.2 Chain Selection
-
-Platforms SHOULD select anchoring chain based on:
-- **Value of anchored data**: High-value → L1 or security-inheriting L2
-- **Volume**: High-volume → L2 or sidechain
-- **Ecosystem alignment**: EVM chains preferred for APS smart contract reuse
-- **Finality requirements**: Time-sensitive → faster finality chains
-
-### 22.7.3 Multi-Chain Anchoring
-
-Platforms MAY anchor the same batch on multiple chains for redundancy:
+1. **Primary anchor:** Base L2 or Arbitrum (low cost, fast).
+2. **Periodic L1 checkpoint:** Every 24 hours (or every 10,000 receipts),
+   anchor a "root of roots" on Ethereum L1 for maximum security.
 
 ```json
 {
   "type": "AnchoringReceipt",
-  "batch_id": "...",
-  "merkle_root": "...",
-  "chains": [
-    {"chain_id": 8453, "tx_hash": "0x...", "block_number": 123},
-    {"chain_id": 1, "tx_hash": "0x...", "block_number": 456}
+  "version": "1.1",
+  "batch_root": "0x...",
+  "batch_size": 10000,
+  "chain_id": "eip155:1",
+  "tx_hash": "0x...",
+  "block_number": 19500000,
+  "timestamp": "2026-02-16T00:00:00Z",
+  "contract_address": "0x...",
+  "anchor_method": "anchorCheckpoint(bytes32,uint256,bytes32[])",
+  "co_anchors": [
+    {
+      "chain_id": "eip155:8453",
+      "tx_hash": "0x...",
+      "block_number": 28451033
+    }
   ]
 }
 ```
 
-## 22.8 Proof-of-Existence
+### 22.8.4 Anchoring Frequency Guidance
 
-Given an item and its Merkle proof, a verifier can prove the item existed at a specific time:
+| Use Case                     | Recommended Frequency | Chain         |
+|------------------------------|-----------------------|---------------|
+| Real-time agent work         | Every 15 minutes      | Base L2       |
+| Daily passport snapshots     | Every 24 hours        | Base L2 + L1  |
+| Regulatory compliance        | Every 1 hour + L1     | L2 + L1       |
+| Low-cost development/testing | On-demand             | Sepolia       |
 
-### 22.8.1 Verification Steps
+---
 
-1. **Hash the item**: Serialize to JCS, compute `item_hash = keccak256(0x00 || jcs_bytes)`
-2. **Verify Merkle proof**: Walk the proof path to recompute the root (§22.6.1)
-3. **Verify on-chain anchor**: Query the contract at `chain.contract_address` for `batch_id` — confirm `merkle_root` matches
-4. **Extract timestamp**: The `block_timestamp` from the anchoring transaction proves existence at that time
-5. **Verify platform signature**: Validate `AnchoringReceipt.proof` against the platform's public key
+## 22.9 Arweave Integration
 
-### 22.8.2 Cross-Chain Verification
+### 22.9.1 Purpose
 
-To verify an anchor from Chain A while operating on Chain B:
+Arweave provides permanent, immutable storage for full passport data that is
+too large for on-chain anchoring (which stores only 32-byte hashes). The
+combination of Merkle anchoring (compact, on-chain) with Arweave (complete
+data, permanent) provides both verifiability and data availability.
 
-1. Obtain the `AnchoringReceipt` from the anchoring platform
-2. Use a block explorer API or light client to verify `tx_hash` on Chain A
-3. Extract `merkle_root` from the transaction calldata or event log
-4. Compare with the `merkle_root` in the receipt
+### 22.9.2 What to Store on Arweave
 
-Platforms SHOULD provide a REST endpoint for cross-chain verification:
+| Data                     | Frequency       | Tags                                    |
+|--------------------------|-----------------|------------------------------------------|
+| Full passport snapshot   | On version bump | `APS-Type: PassportSnapshot`             |
+| Batch receipt set        | Per batch       | `APS-Type: ReceiptBatch`                 |
+| Merkle tree (full)       | Per batch       | `APS-Type: MerkleTree`                   |
+| Anchoring receipt        | Per anchor      | `APS-Type: AnchoringReceipt`             |
 
-```
-GET /api/v1/anchoring/verify?batch_id=<id>&item_hash=<hash>
-Response: { verified: true, chain: {...}, proof: {...}, timestamp: "..." }
-```
-
-## 22.9 Cost Optimization
-
-### 22.9.1 Batch Size Trade-offs
-
-| Batch Size | Gas Overhead | Proof Size | Latency | Recommendation |
-|------------|-------------|------------|---------|----------------|
-| 1 | Highest | 0 hashes | Immediate | Only for critical items |
-| 16 | High | 4 hashes | Minutes | Low-volume platforms |
-| 256 | Medium | 8 hashes | ~30 min | **Balanced default** |
-| 1024 | Lowest | 10 hashes | ~1 hour | High-volume platforms |
-
-### 22.9.2 Anchoring Frequency
-
-Platforms SHOULD configure anchoring based on volume:
-
-- **<100 items/day**: Anchor every 4 hours or on 16-item batch
-- **100-1000 items/day**: Anchor every hour or on 256-item batch
-- **>1000 items/day**: Anchor every 15 minutes or on 1024-item batch
-
-### 22.9.3 L2 vs L1
-
-For routine anchoring, implementations SHOULD use **Base L2** (chain_id: 8453). For annual or high-value snapshots (e.g., governance outcomes, founding cohort records), implementations SHOULD additionally anchor on **Ethereum L1**.
-
-## 22.10 Arweave Integration
-
-For permanent, immutable storage of full passport data alongside on-chain Merkle roots:
-
-### 22.10.1 Storage Flow
-
-1. Serialize the full batch (all items) as a JSON array
-2. Upload to Arweave with tags:
-   - `App-Name`: `APS`
-   - `APS-Version`: `1.1.0`
-   - `Batch-Id`: `<batch_id>`
-   - `Merkle-Root`: `<hex_root>`
-3. Record the Arweave transaction ID in the `AnchoringReceipt`:
+### 22.9.3 Arweave Transaction Format
 
 ```json
 {
-  "permanent_storage": {
-    "provider": "arweave",
-    "tx_id": "abc123...",
-    "url": "https://arweave.net/abc123..."
+  "data": "<JCS-canonicalized passport or batch JSON>",
+  "tags": [
+    { "name": "Content-Type", "value": "application/json" },
+    { "name": "APS-Version", "value": "1.1" },
+    { "name": "APS-Type", "value": "PassportSnapshot" },
+    { "name": "APS-DID", "value": "did:key:z6Mkf5rGMoatrSj1f..." },
+    { "name": "APS-Merkle-Root", "value": "0xdeadbeef..." },
+    { "name": "APS-Chain-Anchor", "value": "eip155:8453:0x9f86d081..." }
+  ]
+}
+```
+
+### 22.9.4 Merkle Roots as Arweave Index
+
+To enable efficient retrieval, each Arweave upload MUST include the
+`APS-Merkle-Root` tag. This allows GraphQL queries to locate all data
+associated with a particular anchoring batch:
+
+```graphql
+query {
+  transactions(
+    tags: [
+      { name: "APS-Merkle-Root", values: ["0xdeadbeef..."] }
+    ]
+  ) {
+    edges {
+      node {
+        id
+        tags { name value }
+      }
+    }
   }
 }
 ```
 
-### 22.10.2 Arweave Verification
+### 22.9.5 Verification with Arweave
 
-1. Fetch the batch data from `arweave.net/<tx_id>`
-2. Recompute Merkle tree from the fetched items
-3. Verify computed root matches on-chain anchor
-4. This proves the full batch data is intact and was committed at anchor time
+To verify a receipt using Arweave as the data availability layer:
+
+```
+function verifyViaArweave(receipt_hash, merkle_root):
+    // 1. Query Arweave for the full Merkle tree
+    tree_tx = arweave.query(tag: "APS-Merkle-Root", value: merkle_root,
+                            tag: "APS-Type", value: "MerkleTree")
+
+    // 2. Download and parse the tree
+    tree = JSON.parse(arweave.getData(tree_tx.id))
+
+    // 3. Verify the receipt_hash is a leaf
+    REQUIRE receipt_hash IN tree.leaves
+
+    // 4. Reconstruct root from tree data
+    computed_root = buildMerkleTree(tree.leaves)
+    REQUIRE computed_root == merkle_root
+
+    // 5. Verify the root was anchored on-chain (§22.6.3)
+    // ... standard chain verification ...
+```
+
+### 22.9.6 Cost Considerations
+
+Arweave pricing is per byte, permanently stored (~$5/MB at time of writing).
+A typical passport snapshot is 2–10 KB ($0.01–$0.05). A batch of 256 receipts
+with Merkle tree is approximately 50–100 KB ($0.25–$0.50).
+
+Implementations SHOULD compress JSON data before uploading (gzip, then store
+with `Content-Encoding: gzip` tag).
+
+---
+
+## 22.10 Backward Compatibility
+
+### 22.10.1 v1.0 Merkle Trees
+
+Implementations MUST accept Merkle proofs without domain separation (v1.0
+format) when verifying existing proofs. New proofs MUST use domain separation.
+
+Detection heuristic: if the proof was generated before the v1.1 effective date
+(or the AnchoringReceipt version is `"1.0"`), fall back to non-domain-separated
+verification.
+
+### 22.10.2 v1.0 Anchoring Receipts
+
+The v1.0 `AnchorReceipt` schema (from `anchoring.schema.json`) uses
+`provider` instead of `chain_id`. Implementations MUST map legacy provider
+strings to CAIP-2 identifiers:
+
+| Legacy `provider`    | CAIP-2 `chain_id`  |
+|----------------------|---------------------|
+| `"base-sepolia"`     | `"eip155:84532"`    |
+| `"base-mainnet"`     | `"eip155:8453"`     |
+| `"ethereum-mainnet"` | `"eip155:1"`        |
+| `"arweave-mainnet"`  | `"arweave:mainnet"` |
+
+---
 
 ## 22.11 Security Considerations
 
-### 22.11.1 Merkle Tree Attacks
+1. **Second-preimage resistance:** Domain separation (§22.2.1) prevents an
+   attacker from constructing a leaf that collides with an internal node.
 
-- **Second-preimage attack**: Mitigated by domain separation (§22.3.2)
-- **Leaf/node confusion**: Mitigated by `0x00`/`0x01` prefixes
-- **Non-determinism**: Mitigated by sorted leaves and sorted pairs
+2. **Batch poisoning:** Anchoring services MUST validate each receipt before
+   including it in a batch. A malformed receipt in a batch does not invalidate
+   other receipts (each has an independent Merkle proof).
 
-### 22.11.2 Chain Reorganization
+3. **RPC trust in cross-chain verification:** Direct RPC verification (§22.7.2
+   Strategy 1) trusts the RPC provider. For high-assurance scenarios, verifiers
+   SHOULD use multiple independent RPC endpoints or header proofs.
 
-- On L1, wait for 12+ confirmations before considering an anchor final
-- On L2 (Base/Arbitrum), finality is inherited from L1 after the L2 batch is posted
-- Implementations SHOULD NOT treat an anchor as final until `finality_status: "finalized"`
+4. **Timestamp accuracy:** Block timestamps on PoS chains have bounded drift
+   (typically ≤ 12 seconds). Implementations MUST NOT rely on sub-minute
+   timestamp precision for ordering guarantees.
 
-### 22.11.3 Anchorer Trust
+5. **Arweave immutability:** Data uploaded to Arweave is permanent. Passport
+   snapshots containing sensitive data MUST be encrypted before upload.
+   See §9 (Memory Vault) for encryption requirements.
 
-The anchoring platform signs the `AnchoringReceipt`. Verifiers MUST check the platform's DID and trust tier before accepting an anchor. An anchor from a `trust_tier: 0` platform provides weaker guarantees than one from `trust_tier: 4`.
+6. **Contract upgrade risk:** Anchoring contracts SHOULD be immutable (no
+   proxy pattern) or use a timelock for upgrades. The contract address in the
+   AnchoringReceipt permanently identifies the verification endpoint.
 
-### 22.11.4 Cost Attacks
+---
 
-An attacker could force excessive anchoring by submitting many items. Platforms SHOULD:
-- Rate-limit item submission per agent
-- Require proof-of-cost (§21.8) before accepting items for anchoring
-- Cap batch frequency per agent
+## 22.12 Normative References
 
-## 22.12 References
-
-- APS §3 Security Envelope
-- APS §4 On-Chain Anchoring (v1.0 base)
-- APS §21 Anti-Sybil Reputation Framework (proof-of-cost)
-- [EIP-155](https://eips.ethereum.org/EIPS/eip-155) — Chain ID specification
-- [RFC 8785](https://datatracker.ietf.org/doc/html/rfc8785) — JSON Canonicalization Scheme
-- [Arweave Documentation](https://docs.arweave.org/)
-- AgentIdentityRegistry.sol (ClawBotDen reference implementation)
+- [RFC 2119] Bradner, S., "Key words for use in RFCs to Indicate Requirement
+  Levels", BCP 14, RFC 2119, March 1997.
+- [RFC 6962] Laurie, B., Langley, A., and E. Kasper, "Certificate
+  Transparency", RFC 6962, June 2013.
+- [RFC 8785] Rundgren, A., Jordan, B., and S. Erdtman, "JSON Canonicalization
+  Scheme (JCS)", RFC 8785, June 2020.
+- [CAIP-2] Chain Agnostic Improvement Proposal 2, "Blockchain ID Specification".
+- [FIPS 202] NIST, "SHA-3 Standard: Permutation-Based Hash and Extendable-Output
+  Functions", August 2015. (Note: APS uses Keccak-256, not SHA-3-256.)
+- [APS §4] Agent Passport Standard, "Anchoring Providers".
+- [APS §6.3] Agent Passport Standard, "Merkle Trees".
+- [APS §14] Agent Passport Standard, "Trust Levels & Blockchain Anchoring".
