@@ -33,7 +33,7 @@ export function publicKeyToDid(publicKey: Uint8Array): string {
 /** Extract public key bytes from did:key */
 export function didToPublicKey(did: string): Uint8Array {
   if (!did.startsWith('did:key:z')) throw new Error('Invalid did:key format');
-  const decoded = bs58.decode(did.slice(8));
+  const decoded = bs58.decode(did.slice(9));
   if (decoded[0] !== 0xed || decoded[1] !== 0x01) throw new Error('Not an Ed25519 did:key');
   return decoded.slice(2);
 }

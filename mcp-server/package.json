@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "tsc && node --test dist/__tests__/*.test.js"
   },
   "keywords": ["mcp", "ai-agent", "identity", "did", "claude-code", "agent-passport", "ed25519"],
   "dependencies": {
