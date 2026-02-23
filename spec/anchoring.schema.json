@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentpassport.org/schemas/anchoring.schema.json",
   "title": "Anchoring",
-  "description": "Agent Passport Standard v0.1 — anchoring receipt, verification, and provider schemas.",
+  "description": "Agent Passport Standard v0.2 — anchoring receipt, verification, provider schemas, and well-known providers.",
   "$defs": {
     "AnchorReceipt": {
       "type": "object",
@@ -25,7 +25,7 @@
         },
         "provider": {
           "type": "string",
-          "description": "Provider identifier (e.g. 'base-sepolia', 'arweave-mainnet')."
+          "description": "Provider identifier. Well-known values: 'base-sepolia', 'base-mainnet', 'ethereum-mainnet', 'arweave-mainnet', 'clawchain-420420'. Custom providers use the format '<network>-<chainId>'."
         }
       }
     },
@@ -58,7 +58,7 @@
       "properties": {
         "name": {
           "type": "string",
-          "description": "Human-readable provider name."
+          "description": "Provider identifier string used in AnchorReceipt.provider."
         },
         "chain_id": {
           "type": "integer",
@@ -67,9 +67,69 @@
         "type": {
           "type": "string",
           "enum": ["ethereum", "arweave", "transparency-log", "noop"],
-          "description": "Anchoring layer type."
+          "description": "Anchoring layer type. Use 'ethereum' for all EVM-compatible chains including private PoA."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of the provider."
+        },
+        "rpc": {
+          "type": "string",
+          "format": "uri",
+          "description": "RPC endpoint URL (optional, for documentation purposes)."
+        },
+        "contract": {
+          "type": "string",
+          "description": "Smart contract address for anchoring (optional)."
         }
       }
+    },
+    "WellKnownProviders": {
+      "description": "Registry of well-known APS anchoring providers.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/ProviderInfo" },
+      "examples": [
+        [
+          {
+            "name": "base-sepolia",
+            "chain_id": 84532,
+            "type": "ethereum",
+            "description": "Base Sepolia testnet — recommended for APS development and staging."
+          },
+          {
+            "name": "base-mainnet",
+            "chain_id": 8453,
+            "type": "ethereum",
+            "description": "Base mainnet — recommended for APS production deployments."
+          },
+          {
+            "name": "ethereum-mainnet",
+            "chain_id": 1,
+            "type": "ethereum",
+            "description": "Ethereum mainnet — highest security, highest cost."
+          },
+          {
+            "name": "arweave-mainnet",
+            "chain_id": 0,
+            "type": "arweave",
+            "description": "Arweave — permanent storage anchoring."
+          },
+          {
+            "name": "clawchain-420420",
+            "chain_id": 420420,
+            "type": "ethereum",
+            "description": "CLAWChain — APS reference implementation. Private Clique PoA blockchain on ClawBotDen k3s cluster. Demonstrates full APS Memory Vault (§11) + Anchoring (§4) integration. Contract: AgentMemoryVault at 0xB8423ACDEdf5f446A6e00860bCBadF7987cD55b8. See: docs/clawchain-provider.md",
+            "rpc": "http://192.168.1.150:30545",
+            "contract": "0xB8423ACDEdf5f446A6e00860bCBadF7987cD55b8"
+          },
+          {
+            "name": "noop",
+            "chain_id": 0,
+            "type": "noop",
+            "description": "No-op provider — for testing and environments without blockchain access."
+          }
+        ]
+      ]
     }
   }
 }

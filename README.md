@@ -65,7 +65,7 @@ Agent Passport Standard defines **cryptographically verifiable artifacts** for A
 - **Cryptographically verifiable** — Ed25519 signatures + keccak-256 hashes + RFC 8785 canonical JSON.
 - **Privacy-first** — Owner controls all data. Memory Vault uses client-side encryption. Platform never holds raw keys.
 - **Immutable lineage** — `genesis_owner` never changes. DNA mutations create new versions, preserving the full hash chain.
-- **Pluggable anchoring** — Optional on-chain commitment (Ethereum/Base, Arweave, transparency logs) via provider interface.
+- **Pluggable anchoring** — Optional on-chain commitment (Ethereum/Base, Arweave, transparency logs, private PoA) via provider interface. CLAWChain (`clawchain-420420`) is the live reference implementation.
 
 ---
 
@@ -504,6 +504,7 @@ APS supports pluggable anchoring to multiple blockchain networks for tamper-evid
 | **Ethereum** | Any EVM chain (Ethereum, Base, Polygon, Arbitrum, etc.) | RPC URL + contract address + sender address |
 | **Arweave** | Permanent storage network | Gateway URL (default: `https://arweave.net`) |
 | **NoOp** | Testing/development (no real anchoring) | None |
+| **CLAWChain** (`clawchain-420420`) | ⭐ **Reference implementation** — private Clique PoA, chainId 420420, full §4+§11 integration. See [`docs/clawchain-provider.md`](./docs/clawchain-provider.md) | RPC `http://192.168.1.150:30545`, contract `AgentMemoryVault` |
 
 ### Usage (Go)
 
@@ -524,6 +525,14 @@ ar := anchor.NewArweaveProvider(anchor.ArweaveConfig{
     GatewayURL: "https://arweave.net",
 })
 receipt, _ := ar.Commit(ctx, hash, anchor.AnchorMetadata{ArtifactType: "receipt"})
+
+// CLAWChain — reference implementation (private Clique PoA, chainId 420420)
+claw := anchor.NewEthereumProvider(anchor.EthereumConfig{
+    RPCURL:          "http://192.168.1.150:30545",
+    ContractAddress: "0xB8423ACDEdf5f446A6e00860bCBadF7987cD55b8",
+    ChainID:         "420420",
+})
+receipt, _ := claw.Commit(ctx, hash, anchor.AnchorMetadata{ArtifactType: "memory-vault"})
 ```
 
 All providers implement the same `AnchorProvider` interface (`Commit`, `Verify`, `Info`), making it easy to switch between chains or use multiple chains simultaneously.

@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.1.1 — 2026-02-23
+
+### CLAWChain Reference Implementation
+
+- **`docs/clawchain-provider.md`** — Full specification of CLAWChain as an APS anchoring provider. First working end-to-end implementation of §4 (Anchoring) + §11 (Memory Vault) on a private Clique PoA chain.
+- **`spec/anchoring.schema.json`** — Added `WellKnownProviders` registry with `clawchain-420420` as named provider. Added `description`, `rpc`, `contract` fields to `ProviderInfo`.
+- **`README.md`** — CLAWChain listed in Supported Providers table; Go usage example added.
+
+### What CLAWChain proves
+- APS anchoring works on private EVM chains (no public testnet required)
+- `AgentMemoryVault.sol` is a compliant §11 Memory Vault smart contract
+- Full clone recovery cycle (save → delete → restore → verify) passes with cryptographic proof
+- `clawchain-memory-sync` OpenClaw plugin is a reference §11 implementation
+
+### Details
+- Chain: `clawchain-420420`, Clique PoA, geth v1.13.15, London fork
+- Contract: `AgentMemoryVault` at `0xB8423ACDEdf5f446A6e00860bCBadF7987cD55b8`
+- Plugin: [`cezexPL/clawbotden.com/plugins/clawchain-memory-sync`](https://github.com/cezexPL/clawbotden.com/tree/main/plugins/clawchain-memory-sync)
+- Clone test TX: `0xb08a337d1fd9167e9135d6155011a3167c4291ec7fcbb82e5e5e8602f9451737` (block 958)
+
+---
+
 ## v1.1.0 — 2026-02-16
 
 ### New Sections
