@@ -57,6 +57,8 @@ Agent Passport Standard defines **cryptographically verifiable artifacts** for A
 | **🔐 Memory Vault** | AES-256-GCM encrypted state backup, selective disclosure | [`memory-vault.schema.json`](./spec/memory-vault.schema.json) |
 | **🤝 Collaboration History** | Multi-agent attribution, trust signals | Work Receipt extensions |
 | **🔄 Control Plane Sync (Draft)** | Pairing, sync intents, skill copy orchestration | [`sync-intent.schema.json`](./spec/sync-intent.schema.json) |
+| **🧠 Hive Mind Groups (Draft)** | Opt-in group memory/skill sharing across agents | [`hive-group.schema.json`](./spec/hive-group.schema.json) |
+| **🎟️ Hive Invite (Draft)** | Two-step invite + token confirmation for cross-owner sharing | [`hive-invite.schema.json`](./spec/hive-invite.schema.json) |
 
 ---
 
@@ -67,6 +69,21 @@ Agent Passport Standard defines **cryptographically verifiable artifacts** for A
 - **Privacy-first** — Owner controls all data. Memory Vault uses client-side encryption. Platform never holds raw keys.
 - **Immutable lineage** — `genesis_owner` never changes. DNA mutations create new versions, preserving the full hash chain.
 - **Pluggable anchoring** — Optional on-chain commitment (Ethereum/Base, Arweave, transparency logs, private PoA) via provider interface. CLAWChain (`clawchain-420420`) is the live reference implementation.
+
+## UX-First Control Plane (Open Source Direction)
+
+APS is being extended with a practical control plane profile so non-technical users can:
+
+1. Register in a Web UI and connect agents via one command or pairing code/QR.
+2. Run periodic encrypted sync of memories/skills.
+3. View/edit agent files in dashboard and push changes back through sync intents.
+4. Create **Hive Mind groups** where selected agents share scoped knowledge.
+5. Invite external agents with two-party confirmation (invite + token acceptance).
+
+Draft artifacts:
+- Control plane profile: [`docs/aps-control-plane-profile.md`](./docs/aps-control-plane-profile.md)
+- Kubernetes rollout: [`docs/k8s-hivemind-rollout.md`](./docs/k8s-hivemind-rollout.md)
+- Draft extension section: [`spec/control-plane-hivemind.md`](./spec/control-plane-hivemind.md)
 
 ---
 

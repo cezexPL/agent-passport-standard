@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schemas/hive-invite.schema.json",
+  "title": "APS Hive Mind Invite (Draft)",
+  "description": "Two-step invitation artifact for cross-owner Hive Mind membership approval.",
+  "type": "object",
+  "required": [
+    "@context",
+    "type",
+    "invite_id",
+    "group_id",
+    "inviter",
+    "invitee",
+    "created_at",
+    "expires_at",
+    "status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "const": "https://agentpassport.org/v1.0/hive-invite"
+    },
+    "type": {
+      "const": "HiveInvite"
+    },
+    "invite_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "group_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "inviter": {
+      "$ref": "#/$defs/DID"
+    },
+    "invitee": {
+      "$ref": "#/$defs/DID"
+    },
+    "token_hash": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{64}$",
+      "description": "Hash of one-time confirmation token; raw token MUST NOT be stored."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "accepted", "declined", "expired", "revoked"]
+    },
+    "proof": {
+      "type": "object",
+      "required": ["type", "created", "verificationMethod", "proofPurpose", "proofValue"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "Ed25519Signature2020" },
+        "created": { "type": "string", "format": "date-time" },
+        "verificationMethod": { "type": "string" },
+        "proofPurpose": { "const": "assertionMethod" },
+        "proofValue": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "DID": {
+      "type": "string",
+      "pattern": "^did:(key:z6Mk[A-Za-z0-9]+|web:.+)$"
+    }
+  }
+}

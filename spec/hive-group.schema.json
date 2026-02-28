@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schemas/hive-group.schema.json",
+  "title": "APS Hive Mind Group (Draft)",
+  "description": "Defines an opt-in group for scoped knowledge synchronization between agents.",
+  "type": "object",
+  "required": [
+    "@context",
+    "type",
+    "group_id",
+    "created_at",
+    "owner",
+    "members",
+    "share_scope",
+    "status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "const": "https://agentpassport.org/v1.0/hive-group"
+    },
+    "type": {
+      "const": "HiveGroup"
+    },
+    "group_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "name": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "owner": {
+      "$ref": "#/$defs/DID"
+    },
+    "members": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["agent_id", "role", "joined_at", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "agent_id": { "$ref": "#/$defs/DID" },
+          "role": { "type": "string", "enum": ["owner", "maintainer", "member", "observer"] },
+          "joined_at": { "type": "string", "format": "date-time" },
+          "status": { "type": "string", "enum": ["active", "pending", "revoked"] }
+        }
+      }
+    },
+    "share_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": ["memories", "skills", "project-notes"]
+      }
+    },
+    "sync_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "type": "string", "enum": ["periodic", "event-driven", "hybrid"] },
+        "interval_sec": { "type": "integer", "minimum": 30 },
+        "conflict_policy": {
+          "type": "string",
+          "enum": ["keep-target-and-import-copy", "overwrite-target", "manual-review"]
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "paused", "archived"]
+    }
+  },
+  "$defs": {
+    "DID": {
+      "type": "string",
+      "pattern": "^did:(key:z6Mk[A-Za-z0-9]+|web:.+)$"
+    }
+  }
+}

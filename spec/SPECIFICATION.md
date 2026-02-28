@@ -1029,6 +1029,7 @@ The following sections extend the core APS specification with advanced security 
 | §21 | Anti-Sybil Reputation Framework | [anti-sybil-reputation.md](anti-sybil-reputation.md) |
 | §22 | Merkle Proofs & On-Chain Anchoring | [merkle-anchoring.md](merkle-anchoring.md) |
 | §23 | A2A Security & Cross-Agent Trust | [a2a-security.md](a2a-security.md) |
+| §24 | Control Plane & Hive Mind Groups (Draft) | [control-plane-hivemind.md](control-plane-hivemind.md) |
 
 These sections are normative for APS v1.1+ implementations.
 
