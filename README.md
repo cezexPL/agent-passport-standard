@@ -84,6 +84,7 @@ Draft artifacts:
 - Control plane profile: [`docs/aps-control-plane-profile.md`](./docs/aps-control-plane-profile.md)
 - Kubernetes rollout: [`docs/k8s-hivemind-rollout.md`](./docs/k8s-hivemind-rollout.md)
 - Draft extension section: [`spec/control-plane-hivemind.md`](./spec/control-plane-hivemind.md)
+- Example k8s manifests: [`examples/k8s/control-plane/`](./examples/k8s/control-plane/)
 
 ---
 

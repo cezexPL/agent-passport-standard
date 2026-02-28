@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aps-control-plane
+  labels:
+    app: aps-control-plane
+spec:
+  type: ClusterIP
+  selector:
+    app: aps-control-plane
+  ports:
+    - name: http
+      port: 8097
+      targetPort: http

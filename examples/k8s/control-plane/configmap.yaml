@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aps-control-plane-config
+  labels:
+    app: aps-control-plane
+data:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  PORT: "8097"
+  SYNC_DEFAULT_INTERVAL_SEC: "1800"
+  SYNC_MAX_RETRIES: "3"
+  CHAIN_ANCHOR_URL: "http://chain-anchor:8091"
+  CHAIN_RPC_URL: "http://geth-rpc:8545"
+  MINIO_ENDPOINT: "http://minio.minio.svc.cluster.local:9000"
+  MINIO_BUCKET: "agent-vault-prod"

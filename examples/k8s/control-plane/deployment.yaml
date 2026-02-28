@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aps-control-plane
+  labels:
+    app: aps-control-plane
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: aps-control-plane
+  template:
+    metadata:
+      labels:
+        app: aps-control-plane
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/cezexpl/aps-control-plane:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8097
+              name: http
+          envFrom:
+            - configMapRef:
+                name: aps-control-plane-config
+            - secretRef:
+                name: aps-control-plane-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1
+              memory: 1Gi
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: aps-control-plane
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: aps-control-plane
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
