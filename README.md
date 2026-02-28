@@ -56,6 +56,7 @@ Agent Passport Standard defines **cryptographically verifiable artifacts** for A
 | **🌳 Lineage & Heritage** | Derivation history, genealogy DAG, heritage scoring | Passport `lineage` field |
 | **🔐 Memory Vault** | AES-256-GCM encrypted state backup, selective disclosure | [`memory-vault.schema.json`](./spec/memory-vault.schema.json) |
 | **🤝 Collaboration History** | Multi-agent attribution, trust signals | Work Receipt extensions |
+| **🔄 Control Plane Sync (Draft)** | Pairing, sync intents, skill copy orchestration | [`sync-intent.schema.json`](./spec/sync-intent.schema.json) |
 
 ---
 
@@ -83,6 +84,13 @@ APS operates at three trust levels with progressively stronger guarantees:
 
 We strongly recommend Level 2 (Anchored) for any production deployment.
 Level 3 (Full) is recommended for agent marketplaces and multi-organization ecosystems.
+
+### Control Plane Profile (Draft)
+
+To support non-technical users (simple bot pairing, encrypted backup/sync, and skill copy via Web UI), see:
+
+- [`docs/aps-control-plane-profile.md`](./docs/aps-control-plane-profile.md)
+- [`spec/sync-intent.schema.json`](./spec/sync-intent.schema.json)
 
 ---
 

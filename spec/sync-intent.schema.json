@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentpassport.org/schemas/sync-intent.schema.json",
+  "title": "APS Sync Intent (Draft)",
+  "description": "Control-plane artifact expressing user-initiated sync operations between agents.",
+  "type": "object",
+  "required": [
+    "@context",
+    "type",
+    "intent_id",
+    "created_at",
+    "source_agent_id",
+    "target_agent_ids",
+    "operation",
+    "payload"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "const": "https://agentpassport.org/v1.0/sync-intent"
+    },
+    "type": {
+      "const": "SyncIntent"
+    },
+    "intent_id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_agent_id": {
+      "type": "string",
+      "pattern": "^did:(key:z6Mk[A-Za-z0-9]+|web:.+)$"
+    },
+    "target_agent_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^did:(key:z6Mk[A-Za-z0-9]+|web:.+)$"
+      }
+    },
+    "operation": {
+      "type": "string",
+      "enum": [
+        "copy-skill",
+        "sync-now",
+        "restore-version"
+      ]
+    },
+    "payload": {
+      "type": "object",
+      "description": "Operation-specific payload.",
+      "additionalProperties": true,
+      "properties": {
+        "skill_names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "conflict_policy": {
+          "type": "string",
+          "enum": [
+            "keep-target-and-import-copy",
+            "overwrite-target",
+            "skip-if-exists"
+          ]
+        },
+        "version_id": {
+          "type": "string"
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "running",
+        "done",
+        "failed"
+      ]
+    },
+    "proof": {
+      "type": "object",
+      "description": "Optional signature over the intent for audit portability.",
+      "required": [
+        "type",
+        "created",
+        "verificationMethod",
+        "proofPurpose",
+        "proofValue"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "Ed25519Signature2020"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "verificationMethod": {
+          "type": "string"
+        },
+        "proofPurpose": {
+          "const": "assertionMethod"
+        },
+        "proofValue": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
