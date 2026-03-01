@@ -13,7 +13,7 @@
     <a href="./python"><img src="https://img.shields.io/badge/Python_SDK-3.10+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.10+"></a>
     <a href="./typescript"><img src="https://img.shields.io/badge/TypeScript_SDK-5.7+-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 5.7+"></a>
     <a href="https://pypi.org/project/aps-sdk/"><img src="https://img.shields.io/badge/PyPI-aps--sdk-blue?style=flat-square&logo=pypi" alt="PyPI"></a>
-    <a href="https://www.npmjs.com/package/aps-sdk"><img src="https://img.shields.io/badge/npm-aps--sdk-red?style=flat-square&logo=npm" alt="npm"></a>
+    <a href="https://www.npmjs.com/package/agent-passport-sdk"><img src="https://img.shields.io/badge/npm-agent--passport--sdk-red?style=flat-square&logo=npm" alt="npm"></a>
     <a href="./spec"><img src="https://img.shields.io/badge/schemas-JSON_Schema-green?style=flat-square" alt="JSON Schema"></a>
     <a href="./go/conformance"><img src="https://img.shields.io/badge/conformance-passing-brightgreen?style=flat-square" alt="Conformance"></a>
     <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache_2.0-blue?style=flat-square" alt="License"></a>
@@ -59,6 +59,18 @@ Agent Passport Standard defines **cryptographically verifiable artifacts** for A
 | **🔄 Control Plane Sync (Draft)** | Pairing, sync intents, skill copy orchestration | [`sync-intent.schema.json`](./spec/sync-intent.schema.json) |
 | **🧠 Hive Mind Groups (Draft)** | Opt-in group memory/skill sharing across agents | [`hive-group.schema.json`](./spec/hive-group.schema.json) |
 | **🎟️ Hive Invite (Draft)** | Two-step invite + token confirmation for cross-owner sharing | [`hive-invite.schema.json`](./spec/hive-invite.schema.json) |
+
+---
+
+## 🚀 Live Reference Implementation
+
+**[aps.clawbotden.com](https://aps.clawbotden.com)** — the official APS portal running the full specification:
+
+- Register your AI agent and get a cryptographic DID
+- Blockchain anchoring on CLAWChain (chainId 420420) via `https://rpc.clawbotden.com`
+- Public agent directory, heritage timeline, skill catalog
+- Verify any agent passport at [`/verify`](https://aps.clawbotden.com/verify)
+- Browse the [`/.well-known/agent-passport-standard`](https://api.clawbotden.com/.well-known/agent-passport-standard) federation endpoint live
 
 ---
 
@@ -162,15 +174,16 @@ report, _ := imported.VerifyAll(senderPublicKey)
 
 ```go
 resolver := did.DefaultResolver() // did:key + did:web
-doc, _ := resolver.Resolve("did:web:clawbotden.com:bots:TARS-001")
+// ClawBotDen resolves by bot name: GET /bots/{name}/did.json
+doc, _ := resolver.Resolve("did:web:clawbotden.com:bots:TARS-Bridge")
 pubKey, _ := did.ExtractPublicKey(doc)
 ```
 
 **Platform Discovery** — any APS platform publishes:
 ```
-GET /.well-known/agent-passport-standard → federation endpoints
+GET /.well-known/agent-passport-standard → federation endpoints (APS v1.0.0)
 GET /.well-known/did.json               → platform DID document
-GET /bots/{name}/did.json               → per-agent DID document
+GET /bots/{name}/did.json               → per-agent DID document (by bot name)
 ```
 
 ### Install the SDK
@@ -233,7 +246,7 @@ assert p.verify(pub)
 ### Use the TypeScript SDK
 
 ```typescript
-import { AgentPassport, generateKeyPair } from 'aps-sdk';
+import { AgentPassport, generateKeyPair } from 'agent-passport-sdk';
 import { bytesToHex } from '@noble/hashes/utils';
 
 const { publicKey, privateKey } = generateKeyPair();
@@ -277,7 +290,10 @@ See [mcp-server/README.md](./mcp-server/README.md) for full documentation.
 
 ---
 
-## 🌐 APS SiteTrust — Web Bot Trust Verification
+## 🌐 APS SiteTrust — Web Bot Trust Verification *(v1.1 — Coming Soon)*
+
+> **Status:** In development. Plugin downloads and hosted endpoints are not yet publicly available.  
+> Track progress: [Roadmap](#roadmap)
 
 APS SiteTrust extends the Agent Passport Standard to the web. Website owners install a lightweight plugin to detect, verify, and monitor AI bots visiting their site.
 
@@ -352,7 +368,9 @@ The challenge is **transparent, voluntary, and open source**. See [spec/safety-c
 
 ---
 
-## 🌍 NORAD.io — Global Bot Monitoring
+## 🌍 NORAD.io — Global Bot Monitoring *(v1.1 — Coming Soon)*
+
+> **Status:** Infrastructure deployed; public plugin network launches with SiteTrust v1.1.
 
 [NORAD.io](https://norad.io) is a real-time global map of AI bot activity, powered by the APS SiteTrust plugin network.
 
@@ -434,7 +452,7 @@ agent-passport-standard/
 │   ├── aps/                       # Core: passport, receipt, envelope, bundle, did, reputation
 │   ├── tests/                     # Test suite + benchmarks
 │   └── API.md                     # Python API documentation
-├── typescript/                    # TypeScript SDK (aps-sdk on npm)
+├── typescript/                    # TypeScript SDK (agent-passport-sdk on npm)
 │   ├── src/                       # Core: passport, receipt, envelope, bundle, did, reputation
 │   ├── tests/                     # Test suite + benchmarks
 │   └── API.md                     # TypeScript API documentation
@@ -530,7 +548,7 @@ APS supports pluggable anchoring to multiple blockchain networks for tamper-evid
 | **Ethereum** | Any EVM chain (Ethereum, Base, Polygon, Arbitrum, etc.) | RPC URL + contract address + sender address |
 | **Arweave** | Permanent storage network | Gateway URL (default: `https://arweave.net`) |
 | **NoOp** | Testing/development (no real anchoring) | None |
-| **CLAWChain** (`clawchain-420420`) | ⭐ **Reference implementation** — private Clique PoA, chainId 420420, full §4+§11 integration. See [`docs/clawchain-provider.md`](./docs/clawchain-provider.md) | RPC `http://192.168.1.150:30545`, contract `AgentMemoryVault` |
+| **CLAWChain** (`clawchain-420420`) | ⭐ **Reference implementation** — private Clique PoA, chainId 420420, full §4+§11 integration. See [`docs/clawchain-provider.md`](./docs/clawchain-provider.md) | RPC `https://rpc.clawbotden.com`, contract `AgentIdentityRegistry` |
 
 ### Usage (Go)
 
@@ -553,9 +571,10 @@ ar := anchor.NewArweaveProvider(anchor.ArweaveConfig{
 receipt, _ := ar.Commit(ctx, hash, anchor.AnchorMetadata{ArtifactType: "receipt"})
 
 // CLAWChain — reference implementation (private Clique PoA, chainId 420420)
+// Live portal: https://aps.clawbotden.com | RPC: https://rpc.clawbotden.com
 claw := anchor.NewEthereumProvider(anchor.EthereumConfig{
-    RPCURL:          "http://192.168.1.150:30545",
-    ContractAddress: "0xB8423ACDEdf5f446A6e00860bCBadF7987cD55b8",
+    RPCURL:          "https://rpc.clawbotden.com",
+    ContractAddress: "0x4a31E7AD1f4a4D6B5776B2F0933e2df937FB9eB2", // AgentIdentityRegistry
     ChainID:         "420420",
 })
 receipt, _ := claw.Commit(ctx, hash, anchor.AnchorMetadata{ArtifactType: "memory-vault"})
@@ -659,5 +678,5 @@ You are free to use, modify, and distribute this standard in both commercial and
 ---
 
 <p align="center">
-  <sub>Created by <a href="https://github.com/cezexPL">Cezary Grotowski</a> · Reference implementation: <a href="https://clawbotden.com">ClawBotDen</a></sub>
+  <sub>Created by <a href="https://github.com/cezexPL">Cezary Grotowski</a> · Reference implementation: <a href="https://aps.clawbotden.com">aps.clawbotden.com</a> · Platform: <a href="https://clawbotden.com">ClawBotDen</a></sub>
 </p>

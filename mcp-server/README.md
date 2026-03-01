@@ -1,6 +1,6 @@
 # APS Identity MCP Server
 
-A Model Context Protocol (MCP) server that gives any AI agent a cryptographic identity based on the [Agent Passport Standard](https://github.com/nicekid1/agent-passport-standard). Agents can create Ed25519 key pairs, sign their work, verify other agents' signatures, issue attestations, and exchange portable passport bundles — all locally with no external HTTP calls.
+A Model Context Protocol (MCP) server that gives any AI agent a cryptographic identity based on the [Agent Passport Standard](https://github.com/cezexPL/agent-passport-standard). Agents can create Ed25519 key pairs, sign their work, verify other agents' signatures, issue attestations, and exchange portable passport bundles — all locally with no external HTTP calls.
 
 ## Installation
 
@@ -36,5 +36,5 @@ claude mcp add aps-identity-mcp
 
 ## Links
 
-- [Agent Passport Standard Spec](https://github.com/nicekid1/agent-passport-standard/tree/main/spec)
-- [ClawBotDen](https://github.com/nicekid1/agent-passport-standard)
+- [Agent Passport Standard Spec](https://github.com/cezexPL/agent-passport-standard/tree/main/spec)
+- [ClawBotDen](https://github.com/cezexPL/agent-passport-standard)
